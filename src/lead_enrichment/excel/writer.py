@@ -6,6 +6,7 @@ import logging
 from pathlib import Path
 
 import openpyxl
+from openpyxl.styles import PatternFill
 
 from ..db.repository import Repository
 
@@ -19,7 +20,41 @@ OUTPUT_COLUMNS = [
     "lusha_email",
     "lusha_handynummer",
     "lusha_festnetz_durchwahl",
+    "Email",
+    "Telefonnummer",
+    "Durchwahl_festnetz",
 ]
+
+# Cell colors
+GREEN_FILL = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="solid")
+ORANGE_FILL = PatternFill(start_color="FFA500", end_color="FFA500", fill_type="solid")
+
+
+def _compare_values(apollo_val: str | None, lusha_val: str | None) -> tuple[str, PatternFill | None]:
+    """Compare Apollo and Lusha values and return (text, fill_color).
+
+    Returns:
+        - ("gleich", GREEN_FILL) if both have same non-empty value
+        - ("ungleich", ORANGE_FILL) if both have different non-empty values
+        - ("Apollo", None) if only Apollo has a value
+        - ("Lusha", None) if only Lusha has a value
+        - ("", None) if both are empty
+    """
+    apollo_has = bool(apollo_val and apollo_val.strip())
+    lusha_has = bool(lusha_val and lusha_val.strip())
+
+    if apollo_has and lusha_has:
+        # Normalize for comparison (strip whitespace, lowercase)
+        if apollo_val.strip().lower() == lusha_val.strip().lower():
+            return "gleich", GREEN_FILL
+        else:
+            return "ungleich", ORANGE_FILL
+    elif apollo_has:
+        return "Apollo", None
+    elif lusha_has:
+        return "Lusha", None
+    else:
+        return "", None
 
 
 def write_enriched_excel(
@@ -49,12 +84,34 @@ def write_enriched_excel(
         excel_row = row.row_id + 1  # row_id is 1-indexed data row, Excel row 1 is headers
         base_col = last_col + 1
 
+        # Write Apollo columns
         ws.cell(row=excel_row, column=base_col + 0, value=row.apollo_email)
         ws.cell(row=excel_row, column=base_col + 1, value=row.apollo_mobile)
         ws.cell(row=excel_row, column=base_col + 2, value=row.apollo_direct)
+
+        # Write Lusha columns
         ws.cell(row=excel_row, column=base_col + 3, value=row.lusha_email)
         ws.cell(row=excel_row, column=base_col + 4, value=row.lusha_mobile)
         ws.cell(row=excel_row, column=base_col + 5, value=row.lusha_direct)
+
+        # Write comparison columns
+        # Email comparison
+        email_text, email_fill = _compare_values(row.apollo_email, row.lusha_email)
+        cell_email = ws.cell(row=excel_row, column=base_col + 6, value=email_text)
+        if email_fill:
+            cell_email.fill = email_fill
+
+        # Telefonnummer (mobile) comparison
+        phone_text, phone_fill = _compare_values(row.apollo_mobile, row.lusha_mobile)
+        cell_phone = ws.cell(row=excel_row, column=base_col + 7, value=phone_text)
+        if phone_fill:
+            cell_phone.fill = phone_fill
+
+        # Durchwahl/Festnetz (direct) comparison
+        direct_text, direct_fill = _compare_values(row.apollo_direct, row.lusha_direct)
+        cell_direct = ws.cell(row=excel_row, column=base_col + 8, value=direct_text)
+        if direct_fill:
+            cell_direct.fill = direct_fill
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     wb.save(output_path)
