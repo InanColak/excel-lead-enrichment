@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from pathlib import Path
 
 import openpyxl
@@ -30,6 +31,33 @@ GREEN_FILL = PatternFill(start_color="90EE90", end_color="90EE90", fill_type="so
 ORANGE_FILL = PatternFill(start_color="FFA500", end_color="FFA500", fill_type="solid")
 
 
+def _normalize_phone(phone: str | None) -> str:
+    """Normalize a phone number for comparison.
+
+    Removes spaces, dashes, parentheses, dots.
+    Keeps + at the beginning and digits only.
+    """
+    if not phone:
+        return ""
+    # Keep only + (at start) and digits
+    normalized = re.sub(r"[^\d+]", "", phone)
+    return normalized
+
+
+def _is_zentrale(phone: str | None) -> bool:
+    """Check if a phone number is a Zentrale (switchboard) number.
+
+    Zentrale numbers typically end with -0 or just 0 as the extension.
+    Examples: +49 721 25516-0, +49 721 255160
+    """
+    if not phone:
+        return False
+    # Check if original has -0 pattern
+    if re.search(r"-0\s*$", phone):
+        return True
+    return False
+
+
 def _compare_values(apollo_val: str | None, lusha_val: str | None) -> tuple[str, PatternFill | None]:
     """Compare Apollo and Lusha values and return (text, fill_color).
 
@@ -46,6 +74,64 @@ def _compare_values(apollo_val: str | None, lusha_val: str | None) -> tuple[str,
     if apollo_has and lusha_has:
         # Normalize for comparison (strip whitespace, lowercase)
         if apollo_val.strip().lower() == lusha_val.strip().lower():
+            return "gleich", GREEN_FILL
+        else:
+            return "ungleich", ORANGE_FILL
+    elif apollo_has:
+        return "Apollo", None
+    elif lusha_has:
+        return "Lusha", None
+    else:
+        return "", None
+
+
+def _compare_phones(apollo_val: str | None, lusha_val: str | None) -> tuple[str, PatternFill | None]:
+    """Compare phone numbers with normalization.
+
+    Normalizes phone numbers before comparison to handle format differences.
+    """
+    apollo_has = bool(apollo_val and apollo_val.strip())
+    lusha_has = bool(lusha_val and lusha_val.strip())
+
+    if apollo_has and lusha_has:
+        # Normalize both numbers
+        apollo_norm = _normalize_phone(apollo_val)
+        lusha_norm = _normalize_phone(lusha_val)
+
+        if apollo_norm == lusha_norm:
+            return "gleich", GREEN_FILL
+        else:
+            return "ungleich", ORANGE_FILL
+    elif apollo_has:
+        return "Apollo", None
+    elif lusha_has:
+        return "Lusha", None
+    else:
+        return "", None
+
+
+def _compare_durchwahl(apollo_val: str | None, lusha_val: str | None) -> tuple[str, PatternFill | None]:
+    """Compare Durchwahl/Festnetz numbers with Zentrale detection.
+
+    If one is Zentrale (-0) and other is a real Durchwahl, they are different.
+    Otherwise, compare normalized numbers.
+    """
+    apollo_has = bool(apollo_val and apollo_val.strip())
+    lusha_has = bool(lusha_val and lusha_val.strip())
+
+    if apollo_has and lusha_has:
+        apollo_zentrale = _is_zentrale(apollo_val)
+        lusha_zentrale = _is_zentrale(lusha_val)
+
+        # If one is Zentrale and other is not, they're different
+        if apollo_zentrale != lusha_zentrale:
+            return "ungleich", ORANGE_FILL
+
+        # Both are same type (both Zentrale or both Durchwahl), compare normalized
+        apollo_norm = _normalize_phone(apollo_val)
+        lusha_norm = _normalize_phone(lusha_val)
+
+        if apollo_norm == lusha_norm:
             return "gleich", GREEN_FILL
         else:
             return "ungleich", ORANGE_FILL
@@ -101,14 +187,14 @@ def write_enriched_excel(
         if email_fill:
             cell_email.fill = email_fill
 
-        # Telefonnummer (mobile) comparison
-        phone_text, phone_fill = _compare_values(row.apollo_mobile, row.lusha_mobile)
+        # Telefonnummer (mobile) comparison - with phone normalization
+        phone_text, phone_fill = _compare_phones(row.apollo_mobile, row.lusha_mobile)
         cell_phone = ws.cell(row=excel_row, column=base_col + 7, value=phone_text)
         if phone_fill:
             cell_phone.fill = phone_fill
 
-        # Durchwahl/Festnetz (direct) comparison
-        direct_text, direct_fill = _compare_values(row.apollo_direct, row.lusha_direct)
+        # Durchwahl/Festnetz (direct) comparison - with Zentrale detection
+        direct_text, direct_fill = _compare_durchwahl(row.apollo_direct, row.lusha_direct)
         cell_direct = ws.cell(row=excel_row, column=base_col + 8, value=direct_text)
         if direct_fill:
             cell_direct.fill = direct_fill
