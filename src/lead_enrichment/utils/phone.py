@@ -69,8 +69,8 @@ def classify_lusha_phones(
             continue
         ptype = (phone.phone_type or "").lower()
         if ptype == "mobile" and not mobile:
-            mobile = phone.phone
+            mobile = phone.number
         elif ptype in ("directdial", "landline") and not direct:
-            direct = phone.phone
+            direct = phone.number
 
     return {"mobile": mobile, "direct_dial": direct}

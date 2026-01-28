@@ -27,11 +27,11 @@ class ColumnMapping(BaseModel):
 # ── Lusha ────────────────────────────────────────────────────────
 
 class LushaPhoneNumber(BaseModel):
-    phone: str
-    phone_type: str = Field(alias="phoneType")
+    number: str
+    phone_type: str | None = Field(default=None, alias="phoneType")
     do_not_call: bool = Field(default=False, alias="doNotCall")
 
-    model_config = {"populate_by_name": True}
+    model_config = {"populate_by_name": True, "extra": "allow"}
 
 
 class LushaEmailAddress(BaseModel):
