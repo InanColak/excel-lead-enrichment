@@ -83,9 +83,10 @@ class LushaClient(BaseAPIClient):
         response = await self._request("POST", "/v2/person", json=body)
         raw_data = response.json()
 
-        # Lusha bulk returns {contactId: {error, data, ...}, ...}
+        # Lusha bulk returns {"contacts": {contactId: {error, data, ...}, ...}, "companies": {...}}
+        contacts_dict = raw_data.get("contacts", {})
         result: dict[str, LushaBulkContact] = {}
-        for contact_id, contact_data in raw_data.items():
+        for contact_id, contact_data in contacts_dict.items():
             result[contact_id] = LushaBulkContact.model_validate(contact_data)
         return result
 
