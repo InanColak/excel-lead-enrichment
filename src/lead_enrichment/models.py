@@ -73,17 +73,11 @@ class LushaPersonResponse(BaseModel):
 class LushaBulkContact(BaseModel):
     """A single contact result in the Lusha bulk response."""
 
-    contact_id: str | None = Field(default=None, alias="contactId")
     error: str | None = None
+    is_credit_charged: bool | None = Field(default=None, alias="isCreditCharged")
     data: LushaContactData | None = None
 
-    model_config = {"populate_by_name": True}
-
-
-class LushaBulkResponse(BaseModel):
-    """Lusha POST /v2/person bulk response."""
-
-    contacts: list[LushaBulkContact] = Field(default_factory=list)
+    model_config = {"populate_by_name": True, "extra": "allow"}
 
 
 # ── Apollo ───────────────────────────────────────────────────────

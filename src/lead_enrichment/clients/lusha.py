@@ -10,7 +10,6 @@ from ..config import Settings
 from ..db.repository import Repository
 from ..models import (
     LushaBulkContact,
-    LushaBulkResponse,
     LushaContactData,
     LushaPersonResponse,
     PersonInput,
@@ -59,8 +58,11 @@ class LushaClient(BaseAPIClient):
         return LushaPersonResponse.model_validate(response.json())
 
     @with_retry(max_attempts=3)
-    async def enrich_bulk(self, persons: list[PersonInput]) -> LushaBulkResponse:
-        """Enrich up to 100 persons via POST /v2/person."""
+    async def enrich_bulk(self, persons: list[PersonInput]) -> dict[str, LushaBulkContact]:
+        """Enrich up to 100 persons via POST /v2/person.
+
+        Returns a dict where keys are contactId (row_id as string).
+        """
         contacts = []
         for p in persons:
             contacts.append({
@@ -79,7 +81,13 @@ class LushaClient(BaseAPIClient):
         }
 
         response = await self._request("POST", "/v2/person", json=body)
-        return LushaBulkResponse.model_validate(response.json())
+        raw_data = response.json()
+
+        # Lusha bulk returns {contactId: {error, data, ...}, ...}
+        result: dict[str, LushaBulkContact] = {}
+        for contact_id, contact_data in raw_data.items():
+            result[contact_id] = LushaBulkContact.model_validate(contact_data)
+        return result
 
     async def enrich_and_save(
         self,
@@ -135,16 +143,10 @@ class LushaClient(BaseAPIClient):
     def _save_bulk_results(
         self,
         persons: list[PersonInput],
-        response: LushaBulkResponse,
+        results_by_id: dict[str, LushaBulkContact],
         repo: Repository,
     ) -> int:
         """Save bulk Lusha results. Returns count of successful enrichments."""
-        # Build a lookup from contactId (row_id as string) to the result
-        results_by_id: dict[str, LushaBulkContact] = {}
-        for contact in response.contacts:
-            if contact.contact_id:
-                results_by_id[contact.contact_id] = contact
-
         success_count = 0
         for person in persons:
             contact = results_by_id.get(str(person.row_id))
@@ -171,11 +173,11 @@ class LushaClient(BaseAPIClient):
         repo: Repository,
     ) -> None:
         """Extract email and phone from Lusha contact data and save to DB."""
-        # Pick the best email (prefer business)
+        # Pick the best email (prefer work/business)
         email: str | None = None
         for addr in data.email_addresses:
             if addr.email:
-                if addr.email_type == "business" or not email:
+                if addr.email_type in ("work", "business") or not email:
                     email = addr.email
 
         # Classify phone numbers
