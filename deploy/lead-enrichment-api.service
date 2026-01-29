@@ -1,0 +1,16 @@
+[Unit]
+Description=Lead Enrichment API Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/excel-lead-enrichment
+Environment="PATH=/root/excel-lead-enrichment/.venv/bin"
+EnvironmentFile=/root/excel-lead-enrichment/.env
+ExecStart=/root/excel-lead-enrichment/.venv/bin/python run_api.py --port 8000
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

@@ -20,7 +20,9 @@
       "Bash(\"C:\\\\Users\\\\hinan\\\\Documents\\\\excel-lead-enrichment\\\\.venv\\\\Scripts\\\\python.exe\" -c \"\nimport httpx, os, json\nfrom dotenv import load_dotenv\nload_dotenv\\(r''C:\\\\Users\\\\hinan\\\\Documents\\\\excel-lead-enrichment\\\\.env''\\)\n\n# Test Apollo WITHOUT webhook \\(no phone reveal\\)\nprint\\(''=== APOLLO SINGLE - NO WEBHOOK ===''\\)\nr = httpx.post\\(\n    ''https://api.apollo.io/api/v1/people/match'',\n    json={\n        ''first_name'': ''Achim'',\n        ''last_name'': ''Kitschmann'',\n        ''organization_name'': ''OSYPKA'',\n        ''reveal_personal_emails'': True,\n    },\n    headers={\n        ''X-Api-Key'': os.environ[''ENRICHMENT_APOLLO_API_KEY''],\n        ''Content-Type'': ''application/json'',\n        ''Cache-Control'': ''no-cache'',\n    },\n\\)\nprint\\(f''Status: {r.status_code}''\\)\nbody = r.json\\(\\)\nif r.status_code == 200 and body.get\\(''person''\\):\n    p = body[''person'']\n    print\\(f''Name: {p.get\\(\"\"first_name\"\"\\)} {p.get\\(\"\"last_name\"\"\\)}''\\)\n    print\\(f''Email: {p.get\\(\"\"email\"\"\\)}''\\)\n    print\\(f''ID: {p.get\\(\"\"id\"\"\\)}''\\)\n    print\\(f''Title: {p.get\\(\"\"title\"\"\\)}''\\)\nelse:\n    print\\(f''Body: {r.text[:500]}''\\)\n\nprint\\(\\)\nprint\\(''Webhook URL from .env:'', os.environ.get\\(''ENRICHMENT_WEBHOOK_URL'', ''NOT SET''\\)\\)\n\")",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(.venv/Scripts/python:*)",
+      "Bash(.venv/Scripts/pip install:*)"
     ]
   }
 }
