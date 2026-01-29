@@ -6,11 +6,12 @@ import logging
 import shutil
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from ..config import Settings
+from .security import get_current_user
 from ..orchestrator import EnrichmentService
 from .runner import runner
 from .schemas import (
@@ -66,7 +67,10 @@ async def health_check() -> HealthResponse:
     responses={400: {"model": ErrorResponse}, 500: {"model": ErrorResponse}},
     tags=["Enrichment"],
 )
-async def start_enrichment(file: UploadFile = File(...)) -> EnrichmentStartResponse:
+async def start_enrichment(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+) -> EnrichmentStartResponse:
     """Start a new enrichment job.
 
     Upload an Excel file (.xlsx) containing leads to enrich.
@@ -112,7 +116,10 @@ async def start_enrichment(file: UploadFile = File(...)) -> EnrichmentStartRespo
     responses={404: {"model": ErrorResponse}},
     tags=["Enrichment"],
 )
-async def get_status(run_id: str) -> EnrichmentStatusResponse:
+async def get_status(
+    run_id: str,
+    current_user: dict = Depends(get_current_user),
+) -> EnrichmentStatusResponse:
     """Get the status of an enrichment job."""
     run = runner.get_run(run_id)
     if not run:
@@ -152,7 +159,10 @@ async def get_status(run_id: str) -> EnrichmentStatusResponse:
     },
     tags=["Enrichment"],
 )
-async def download_result(run_id: str) -> FileResponse:
+async def download_result(
+    run_id: str,
+    current_user: dict = Depends(get_current_user),
+) -> FileResponse:
     """Download the enriched Excel file for a completed run."""
     run = runner.get_run(run_id)
     if not run:
@@ -180,7 +190,9 @@ async def download_result(run_id: str) -> FileResponse:
     response_model=RunListResponse,
     tags=["Enrichment"],
 )
-async def list_runs() -> RunListResponse:
+async def list_runs(
+    current_user: dict = Depends(get_current_user),
+) -> RunListResponse:
     """List all enrichment runs."""
     runs = runner.get_all_runs()
     items = [

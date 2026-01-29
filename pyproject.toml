@@ -19,6 +19,7 @@ dependencies = [
     "openai>=1.0,<2.0",
     "structlog>=24.0",
     "python-multipart>=0.0.9",
+    "python-jose[cryptography]>=3.3",
 ]
 
 [project.optional-dependencies]
