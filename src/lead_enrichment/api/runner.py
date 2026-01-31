@@ -87,15 +87,10 @@ class EnrichmentRunner:
             total = service.load_excel(input_path)
             self.update_run(run_id, total_rows=total)
 
-            # Start webhook server
-            from ..webhook.runner import WebhookServerRunner
-
-            webhook_runner = WebhookServerRunner(
-                host="0.0.0.0",
-                port=service._settings.webhook_port,
-                repo=service.repo,
-            )
-            webhook_runner.start()
+            # Set repo in app.state for webhook endpoint (integrated into main API)
+            from .server import app
+            app.state.repo = service.repo
+            logger.info("Webhook endpoint ready at /webhook/apollo")
 
             try:
                 # Phase 2: Lusha
@@ -114,7 +109,8 @@ class EnrichmentRunner:
                 self.update_from_service(run_id, service)
 
             finally:
-                webhook_runner.stop()
+                # Clear repo from app state when done
+                app.state.repo = None
 
             # Phase 5: Export
             self.update_run(run_id, status=RunStatus.EXPORTING)

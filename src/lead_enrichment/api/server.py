@@ -6,11 +6,12 @@ import logging
 import shutil
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 from ..config import Settings
+from ..models import ApolloWebhookPayload
 from .security import get_current_user
 from ..orchestrator import EnrichmentService
 from .runner import runner
@@ -207,6 +208,46 @@ async def list_runs(
         for r in runs
     ]
     return RunListResponse(runs=items)
+
+
+# ──────────────────────────────────────────────────────────────────
+# Apollo Webhook Endpoint (integrated into main API)
+# ──────────────────────────────────────────────────────────────────
+
+@app.post("/webhook/apollo", tags=["Webhook"])
+async def receive_apollo_webhook(request: Request) -> JSONResponse:
+    """Receive phone number data from Apollo.
+
+    Apollo POSTs this payload asynchronously after a people/match call
+    with reveal_phone_number=true. We parse the phone numbers and
+    update the database via the handler.
+    """
+    from ..webhook.handlers import handle_apollo_webhook
+
+    body = await request.json()
+    logger.info("Received Apollo webhook payload: %s", body)
+
+    # Get repo from app state (set by runner when enrichment starts)
+    repo = getattr(app.state, "repo", None)
+    if repo is None:
+        logger.warning("Webhook received but no active enrichment session")
+        return JSONResponse({"status": "no_session", "message": "No active enrichment"})
+
+    try:
+        payload = ApolloWebhookPayload.model_validate(body)
+        processed = handle_apollo_webhook(payload, repo)
+        logger.info("Processed %d person(s) from webhook", processed)
+        return JSONResponse({"status": "received", "processed": processed})
+    except Exception:
+        logger.exception("Error processing Apollo webhook")
+        # Return 200 anyway so Apollo doesn't retry endlessly
+        return JSONResponse({"status": "error"}, status_code=200)
+
+
+@app.get("/webhook/apollo/health", tags=["Webhook"])
+async def webhook_health() -> dict:
+    """Health check for webhook endpoint."""
+    return {"status": "ok", "webhook": "apollo"}
 
 
 # ──────────────────────────────────────────────────────────────────
