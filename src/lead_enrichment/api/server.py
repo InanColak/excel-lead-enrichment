@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import shutil
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
@@ -109,8 +108,18 @@ async def start_enrichment(
     output_path = OUTPUT_DIR / f"{run_id}_enriched.xlsx"
 
     try:
+        content = await file.read()
+        # Check if content is base64 encoded (Power Automate sometimes sends base64)
+        import base64
+        try:
+            decoded = base64.b64decode(content)
+            # Verify it's a valid ZIP/Excel file (starts with PK)
+            if decoded[:2] == b"PK":
+                content = decoded
+        except Exception:
+            pass
         with open(input_path, "wb") as f:
-            shutil.copyfileobj(file.file, f)
+            f.write(content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
 
