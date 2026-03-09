@@ -68,7 +68,10 @@ async def health_check() -> HealthResponse:
     tags=["Enrichment"],
 )
 async def start_enrichment(
-    file: UploadFile = File(...),
+    request: Request,
+    file: UploadFile | None = File(default=None),
+    file_base64: str | None = Form(default=None),
+    filename: str | None = Form(default=None),
     callback_url: str | None = Form(
         default=None,
         description="Power Automate trigger URL for completion/failure notification",
@@ -82,15 +85,37 @@ async def start_enrichment(
     """Start a new enrichment job.
 
     Upload an Excel file (.xlsx) containing leads to enrich.
-    The enrichment runs in the background. Use the returned run_id
-    to check status via GET /api/status/{run_id}.
-
-    Optionally provide a callback_url (Power Automate HTTP trigger URL).
-    When enrichment completes or fails, the API will POST a JSON payload
-    to this URL with run status, statistics, and download link.
+    Accepts either:
+      - file: standard multipart file upload
+      - file_base64 + filename: base64-encoded file (for Power Automate)
     """
-    if not file.filename or not file.filename.endswith(".xlsx"):
-        raise HTTPException(status_code=400, detail="File must be an Excel file (.xlsx)")
+    import base64
+
+    # Determine file content and name
+    if file_base64:
+        # Power Automate sends base64-encoded file content
+        actual_filename = filename or "upload.xlsx"
+        if not actual_filename.endswith(".xlsx"):
+            raise HTTPException(
+                status_code=400, detail="File must be an Excel file (.xlsx)"
+            )
+        try:
+            content = base64.b64decode(file_base64)
+        except Exception:
+            raise HTTPException(
+                status_code=400, detail="Invalid base64 file content"
+            )
+    elif file:
+        actual_filename = file.filename or "upload.xlsx"
+        if not actual_filename.endswith(".xlsx"):
+            raise HTTPException(
+                status_code=400, detail="File must be an Excel file (.xlsx)"
+            )
+        content = await file.read()
+    else:
+        raise HTTPException(
+            status_code=400, detail="No file provided. Send 'file' or 'file_base64'."
+        )
 
     try:
         settings = Settings()  # type: ignore[call-arg]
@@ -100,24 +125,14 @@ async def start_enrichment(
 
     # Create run
     run_id = runner.create_run(
-        file.filename, callback_url=callback_url, user_email=user_email
+        actual_filename, callback_url=callback_url, user_email=user_email
     )
 
     # Save uploaded file
-    input_path = UPLOAD_DIR / f"{run_id}_{file.filename}"
+    input_path = UPLOAD_DIR / f"{run_id}_{actual_filename}"
     output_path = OUTPUT_DIR / f"{run_id}_enriched.xlsx"
 
     try:
-        content = await file.read()
-        # Check if content is base64 encoded (Power Automate sometimes sends base64)
-        import base64
-        try:
-            decoded = base64.b64decode(content)
-            # Verify it's a valid ZIP/Excel file (starts with PK)
-            if decoded[:2] == b"PK":
-                content = decoded
-        except Exception:
-            pass
         with open(input_path, "wb") as f:
             f.write(content)
     except Exception as e:
