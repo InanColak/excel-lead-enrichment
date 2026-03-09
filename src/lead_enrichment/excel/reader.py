@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 _COLUMN_DETECTION_PROMPT = """You are analyzing an Excel spreadsheet. Given the column headers and a few sample rows, identify which columns contain:
 1. First name (Vorname / first_name / ad / isim / Name)
 2. Last name (Nachname / last_name / soyad / surname / Familienname)
-3. Company name (Firma / company / Unternehmen / şirket / sirket / organization)
+3. Company name (Firma / company / Unternehmen / sirket / organization)
 
 Return a JSON object with exactly these keys:
 - "first_name_col": the exact column header text for first name

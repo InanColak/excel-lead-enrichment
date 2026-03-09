@@ -1,54 +1,54 @@
-# Power Automate + SharePoint Entegrasyonu
+# Power Automate + SharePoint Integration
 
-Bu rehber, Lead Enrichment API'yi Power Automate ile SharePoint'e bağlamak için gereken iki flow'u açıklar.
+This guide describes the two flows needed to connect the Lead Enrichment API with Power Automate and SharePoint.
 
-## Gereksinimler
+## Prerequisites
 
-- API sunucusunun çalışıyor olması (public URL veya on-premises data gateway)
-- `.env` dosyasında `ENRICHMENT_API_KEY` tanımlı olmalı
-- SharePoint'te iki klasör oluşturulmuş olmalı:
-  - `Lead Enrichment/Input` — kullanıcılar Excel dosyalarını buraya yükler
-  - `Lead Enrichment/Output` — zenginleştirilmiş dosyalar buraya yazılır
+- API server must be running (public URL or on-premises data gateway)
+- `ENRICHMENT_API_KEY` must be set in the `.env` file
+- Two SharePoint folders must exist:
+  - `lead-enrichment-input` — users upload Excel files here
+  - `lead-enrichment-output` — enriched files are written here
 
-## Mimari
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
 │                    Power Automate                        │
 │                                                         │
-│  FLOW 1: Tetikleme                                      │
+│  FLOW 1: Trigger                                        │
 │  ┌─────────────┐    ┌──────────────┐    ┌────────────┐  │
-│  │ SharePoint  │───▶│ POST /api/   │───▶│ Callback   │  │
-│  │ Input'a     │    │ enrich       │    │ URL olarak │  │
-│  │ dosya       │    │ (dosya +     │    │ Flow 2'nin │  │
-│  │ yüklendi    │    │ callback)    │    │ URL'i      │  │
+│  │ SharePoint  │───▶│ POST /api/   │───▶│ Passes     │  │
+│  │ file        │    │ enrich       │    │ Flow 2 URL │  │
+│  │ uploaded    │    │ (file +      │    │ as callback│  │
+│  │             │    │ callback)    │    │            │  │
 │  └─────────────┘    └──────────────┘    └────────────┘  │
 │                                                         │
-│  FLOW 2: Callback (İşlem bitince tetiklenir)            │
+│  FLOW 2: Callback (triggered when processing completes) │
 │  ┌─────────────┐    ┌──────────────┐    ┌────────────┐  │
-│  │ HTTP POST   │───▶│ Dosyayı      │───▶│ Teams      │  │
-│  │ geldi       │    │ indir +      │    │ bildirimi  │  │
-│  │ (API'den)   │    │ SharePoint'e │    │ gönder     │  │
-│  └─────────────┘    │ yükle        │    └────────────┘  │
+│  │ HTTP POST   │───▶│ Download     │───▶│ Teams      │  │
+│  │ received    │    │ file +       │    │ notify     │  │
+│  │ (from API)  │    │ upload to    │    │ user       │  │
+│  └─────────────┘    │ SharePoint   │    └────────────┘  │
 │                     └──────────────┘                    │
 └─────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Flow 1: SharePoint → API'ye Gönder
+## Flow 1: SharePoint → Send to API
 
-### Adım 1: Trigger
+### Step 1: Trigger
 - **Trigger**: "When a file is created in a folder" (SharePoint)
-- **Site Address**: Şirket SharePoint sitesi
-- **Folder Id**: `/Lead Enrichment/Input`
+- **Site Address**: Your company SharePoint site
+- **Folder Id**: `/lead-enrichment-input`
 
-### Adım 2: Get file content
+### Step 2: Get file content
 - **Action**: "Get file content" (SharePoint)
-- **Site Address**: Aynı site
+- **Site Address**: Same site
 - **File Identifier**: `triggerOutputs()?['body/{Identifier}']`
 
-### Adım 3: HTTP — API'ye dosya gönder
+### Step 3: HTTP — Send file to API
 - **Action**: "HTTP" (Premium connector)
 - **Method**: POST
 - **URI**: `https://YOUR-API-URL/api/enrich`
@@ -56,13 +56,14 @@ Bu rehber, Lead Enrichment API'yi Power Automate ile SharePoint'e bağlamak içi
   ```
   X-API-Key: YOUR_ENRICHMENT_API_KEY
   ```
-- **Body**: Form-data olarak gönder:
-  - `file`: SharePoint'ten alınan dosya içeriği (binary)
-  - `callback_url`: Flow 2'nin HTTP trigger URL'i
+- **Body**: Send as form-data:
+  - `file`: File content from SharePoint (binary)
+  - `callback_url`: Flow 2's HTTP trigger URL
+  - `user_email`: Uploader's email for Teams notification
 
-> **Power Automate'te HTTP multipart/form-data gönderme:**
+> **Sending HTTP multipart/form-data in Power Automate:**
 >
-> Body kısmını şu şekilde ayarlayın:
+> Configure the body as follows:
 > ```json
 > {
 >   "$content-type": "multipart/form-data",
@@ -77,13 +78,19 @@ Bu rehber, Lead Enrichment API'yi Power Automate ile SharePoint'e bağlamak içi
 >       "headers": {
 >         "Content-Disposition": "form-data; name=\"callback_url\""
 >       },
->       "body": "FLOW_2_HTTP_TRIGGER_URL_BURAYA"
+>       "body": "FLOW_2_HTTP_TRIGGER_URL_HERE"
+>     },
+>     {
+>       "headers": {
+>         "Content-Disposition": "form-data; name=\"user_email\""
+>       },
+>       "body": "@{triggerOutputs()?['body/{Author}/Email']}"
 >     }
 >   ]
 > }
 > ```
 
-### Adım 4 (Opsiyonel): Parse response
+### Step 4 (Optional): Parse response
 - **Action**: "Parse JSON"
 - **Content**: HTTP response body
 - **Schema**:
@@ -100,9 +107,9 @@ Bu rehber, Lead Enrichment API'yi Power Automate ile SharePoint'e bağlamak içi
 
 ---
 
-## Flow 2: Callback → SharePoint + Teams Bildirimi
+## Flow 2: Callback → SharePoint + Teams Notification
 
-### Adım 1: Trigger
+### Step 1: Trigger
 - **Trigger**: "When an HTTP request is received" (Premium)
 - **Method**: POST
 - **Request Body JSON Schema**:
@@ -116,6 +123,7 @@ Bu rehber, Lead Enrichment API'yi Power Automate ile SharePoint'e bağlamak içi
       "total_rows": { "type": "integer" },
       "error_message": { "type": "string" },
       "download_url": { "type": "string" },
+      "user_email": { "type": "string" },
       "started_at": { "type": "string" },
       "completed_at": { "type": "string" },
       "lusha": {
@@ -140,12 +148,12 @@ Bu rehber, Lead Enrichment API'yi Power Automate ile SharePoint'e bağlamak içi
   }
   ```
 
-### Adım 2: Condition — Başarılı mı?
+### Step 2: Condition — Success or failure?
 - **Condition**: `triggerBody()?['status']` is equal to `completed`
 
-### ✅ If Yes (Başarılı):
+### If Yes (Success):
 
-#### Adım 2a: HTTP — Zenginleştirilmiş dosyayı indir
+#### Step 2a: HTTP — Download enriched file
 - **Method**: GET
 - **URI**: `https://YOUR-API-URL@{triggerBody()?['download_url']}`
 - **Headers**:
@@ -153,67 +161,62 @@ Bu rehber, Lead Enrichment API'yi Power Automate ile SharePoint'e bağlamak içi
   X-API-Key: YOUR_ENRICHMENT_API_KEY
   ```
 
-#### Adım 2b: Create file (SharePoint)
+#### Step 2b: Create file (SharePoint)
 - **Action**: "Create file" (SharePoint)
-- **Site Address**: Şirket SharePoint sitesi
-- **Folder Path**: `/Lead Enrichment/Output`
-- **File Name**: `enriched_@{triggerBody()?['input_file']}`
+- **Site Address**: Your company SharePoint site
+- **Folder Path**: `/lead-enrichment-output`
+- **File Name**: `concat('enriched_', triggerBody()?['input_file'])`
 - **File Content**: HTTP response body (binary)
 
-#### Adım 2c: Teams bildirimi — Başarı
+#### Step 2c: Teams notification — Success
 - **Action**: "Post message in a chat or channel" (Teams)
-- **Team**: İlgili ekip
-- **Channel**: İlgili kanal
+- **Post as**: Flow bot
+- **Post in**: Chat with Flow bot
+- **Recipient**: `triggerBody()?['user_email']`
 - **Message**:
   ```
-  ✅ Lead Enrichment Tamamlandı!
-
-  📄 Dosya: @{triggerBody()?['input_file']}
-  📊 Toplam satır: @{triggerBody()?['total_rows']}
-
-  Lusha: @{triggerBody()?['lusha']?['complete']} başarılı, @{triggerBody()?['lusha']?['error']} hata
-  Apollo: @{triggerBody()?['apollo']?['complete']} başarılı, @{triggerBody()?['apollo']?['error']} hata, @{triggerBody()?['apollo']?['timeout']} timeout
-
-  📁 Sonuç: Lead Enrichment/Output/enriched_@{triggerBody()?['input_file']}
+  Lead Enrichment abgeschlossen!
+  Datei: @{triggerBody()?['input_file']}
+  Gesamtzeilen: @{triggerBody()?['total_rows']}
+  Ergebnis liegt im Ordner: lead-enrichment-output
   ```
 
-### ❌ If No (Hata):
+### If No (Error):
 
-#### Adım 2d: Teams bildirimi — Hata
+#### Step 2d: Teams notification — Error
 - **Action**: "Post message in a chat or channel" (Teams)
-- **Team**: İlgili ekip
-- **Channel**: İlgili kanal
+- **Post as**: Flow bot
+- **Post in**: Chat with Flow bot
+- **Recipient**: `triggerBody()?['user_email']`
 - **Message**:
   ```
-  ❌ Lead Enrichment Başarısız!
-
-  📄 Dosya: @{triggerBody()?['input_file']}
-  🚨 Hata: @{triggerBody()?['error_message']}
-
-  Lütfen dosyayı kontrol edip tekrar deneyin.
+  Lead Enrichment fehlgeschlagen!
+  Datei: @{triggerBody()?['input_file']}
+  Fehler: @{triggerBody()?['error_message']}
+  Bitte die Datei ueberpruefen und erneut versuchen.
   ```
 
 ---
 
-## Kurulum Sırası
+## Setup Order
 
-1. **Önce Flow 2'yi oluşturun** — "When an HTTP request is received" trigger'ı bir URL üretecek
-2. Flow 2'nin trigger URL'ini kopyalayın
-3. **Flow 1'i oluşturun** — `callback_url` alanına Flow 2'nin URL'ini yapıştırın
-4. Test edin: SharePoint Input klasörüne bir test Excel dosyası yükleyin
+1. **Create Flow 2 first** — the "When an HTTP request is received" trigger generates a URL
+2. Copy Flow 2's trigger URL
+3. **Create Flow 1** — paste Flow 2's URL into the `callback_url` field
+4. Test: Upload a test Excel file to the SharePoint input folder
 
-## Güvenlik Notları
+## Security Notes
 
-- `ENRICHMENT_API_KEY` değerini güçlü ve rastgele seçin (en az 32 karakter)
-- Power Automate flow'larında API key'i bir Environment Variable olarak saklayın
-- Flow 2'nin HTTP trigger URL'i tahmin edilemez olduğu için ek auth gerekmez
-- API sunucusunun HTTPS üzerinden erişilebilir olduğundan emin olun
+- Choose a strong, random `ENRICHMENT_API_KEY` (at least 32 characters)
+- Store the API key as an Environment Variable in Power Automate flows
+- Flow 2's HTTP trigger URL is unguessable, so no additional auth is needed
+- Ensure the API server is accessible over HTTPS
 
-## Sorun Giderme
+## Troubleshooting
 
-| Sorun | Çözüm |
-|-------|-------|
-| 401 Unauthorized | `X-API-Key` header'ını ve `.env` dosyasındaki `ENRICHMENT_API_KEY` değerini kontrol edin |
-| Callback gelmiyor | Flow 2'nin aktif olduğundan ve URL'in doğru olduğundan emin olun |
-| Dosya boş geliyor | SharePoint "Get file content" adımının doğru dosyayı aldığını kontrol edin |
-| Teams mesajı gitmiyor | Teams connector'ının doğru bağlandığını ve kanalın mevcut olduğunu kontrol edin |
+| Issue | Solution |
+|-------|----------|
+| 401 Unauthorized | Check the `X-API-Key` header and the `ENRICHMENT_API_KEY` value in `.env` |
+| Callback not arriving | Ensure Flow 2 is active and the URL is correct |
+| Empty file received | Check that the SharePoint "Get file content" step is fetching the correct file |
+| Teams message not sent | Check that the Teams connector is properly connected and the channel exists |
