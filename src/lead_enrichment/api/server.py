@@ -6,13 +6,12 @@ import logging
 import shutil
 from pathlib import Path
 
-from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile
+from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, JSONResponse
 
 from ..config import Settings
 from ..models import ApolloWebhookPayload
-from .security import get_current_user
 from ..orchestrator import EnrichmentService
 from .runner import runner
 from .schemas import (
@@ -25,6 +24,7 @@ from .schemas import (
     RunListResponse,
     RunStatus,
 )
+from .security import get_current_user
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +70,14 @@ async def health_check() -> HealthResponse:
 )
 async def start_enrichment(
     file: UploadFile = File(...),
+    callback_url: str | None = Form(
+        default=None,
+        description="Power Automate trigger URL for completion/failure notification",
+    ),
+    user_email: str | None = Form(
+        default=None,
+        description="Email of the user who uploaded the file (for Teams notification)",
+    ),
     current_user: dict = Depends(get_current_user),
 ) -> EnrichmentStartResponse:
     """Start a new enrichment job.
@@ -77,6 +85,10 @@ async def start_enrichment(
     Upload an Excel file (.xlsx) containing leads to enrich.
     The enrichment runs in the background. Use the returned run_id
     to check status via GET /api/status/{run_id}.
+
+    Optionally provide a callback_url (Power Automate HTTP trigger URL).
+    When enrichment completes or fails, the API will POST a JSON payload
+    to this URL with run status, statistics, and download link.
     """
     if not file.filename or not file.filename.endswith(".xlsx"):
         raise HTTPException(status_code=400, detail="File must be an Excel file (.xlsx)")
@@ -88,7 +100,9 @@ async def start_enrichment(
         raise HTTPException(status_code=500, detail=f"Server configuration error: {e}")
 
     # Create run
-    run_id = runner.create_run(file.filename)
+    run_id = runner.create_run(
+        file.filename, callback_url=callback_url, user_email=user_email
+    )
 
     # Save uploaded file
     input_path = UPLOAD_DIR / f"{run_id}_{file.filename}"

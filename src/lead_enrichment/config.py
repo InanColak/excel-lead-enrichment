@@ -40,6 +40,9 @@ class Settings(BaseSettings):
     http_timeout_seconds: int = Field(default=30, description="HTTP request timeout in seconds")
     max_retries: int = Field(default=3, description="Max retry attempts for failed API requests")
 
+    # API Authentication
+    api_key: str = Field(default="", description="API key for Power Automate and external clients")
+
     # Paths
     db_path: Path = Field(default=Path("data/enrichment.db"), description="SQLite database path")
 

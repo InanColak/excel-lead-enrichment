@@ -82,3 +82,30 @@ class ErrorResponse(BaseModel):
 
     error: str
     detail: str | None = None
+
+
+class CallbackPayload(BaseModel):
+    """Payload sent to callback_url when enrichment completes or fails.
+
+    Power Automate receives this and decides:
+    - status == "completed" → download file, upload to SharePoint, notify success
+    - status == "failed" → notify error via Teams
+    """
+
+    run_id: str
+    status: str  # "completed" or "failed"
+    input_file: str | None = None
+    total_rows: int = 0
+    lusha: APIStatusCounts = Field(default_factory=APIStatusCounts)
+    apollo: APIStatusCounts = Field(default_factory=APIStatusCounts)
+    started_at: str | None = None
+    completed_at: str | None = None
+    error_message: str | None = None
+    user_email: str | None = Field(
+        default=None,
+        description="Email of the user who uploaded the file (for Teams DM)",
+    )
+    download_url: str | None = Field(
+        default=None,
+        description="Relative URL to download the enriched file (e.g. /api/export/{run_id})",
+    )
