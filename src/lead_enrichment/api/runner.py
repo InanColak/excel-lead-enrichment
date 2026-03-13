@@ -14,6 +14,7 @@ import httpx
 from .schemas import APIStatusCounts, CallbackPayload, RunStatus
 
 if TYPE_CHECKING:
+    from ..db.repository import Repository
     from ..orchestrator import EnrichmentService
 
 logger = logging.getLogger(__name__)
@@ -25,6 +26,49 @@ class EnrichmentRunner:
     def __init__(self) -> None:
         self._runs: dict[str, dict] = {}
         self._tasks: dict[str, asyncio.Task] = {}
+        self._active_repos: dict[str, "Repository"] = {}  # run_id -> Repository
+
+    def register_repo(self, run_id: str, repo: "Repository") -> None:
+        """Register a run's repository for webhook routing."""
+        self._active_repos[run_id] = repo
+
+    def unregister_repo(self, run_id: str) -> None:
+        """Remove a run's repository from active set."""
+        self._active_repos.pop(run_id, None)
+
+    def find_repo_for_person(self, apollo_person_id: str) -> "Repository | None":
+        """Find which active repo has a webhook_tracking entry for this person."""
+        for run_id, repo in self._active_repos.items():
+            try:
+                row_id = repo.get_row_id_by_apollo_person_id(apollo_person_id)
+                if row_id is not None:
+                    return repo
+            except Exception:
+                logger.warning(
+                    "Error looking up person %s in run %s",
+                    apollo_person_id,
+                    run_id,
+                    exc_info=True,
+                )
+                continue
+        return None
+
+    def _cleanup_old_runs(self) -> None:
+        """Remove finished runs older than 24 hours to prevent memory leaks."""
+        now = datetime.now(timezone.utc)
+        finished_statuses = {RunStatus.COMPLETED, RunStatus.FAILED}
+        to_remove = [
+            rid
+            for rid, run in self._runs.items()
+            if run["status"] in finished_statuses
+            and run.get("completed_at")
+            and (now - run["completed_at"]).total_seconds() > 86400
+        ]
+        for rid in to_remove:
+            self._runs.pop(rid, None)
+            self._tasks.pop(rid, None)
+        if to_remove:
+            logger.info("Cleaned up %d old run(s)", len(to_remove))
 
     def create_run(
         self,
@@ -33,6 +77,7 @@ class EnrichmentRunner:
         user_email: str | None = None,
     ) -> str:
         """Create a new run and return its ID."""
+        self._cleanup_old_runs()
         run_id = str(uuid.uuid4())[:8]
         self._runs[run_id] = {
             "run_id": run_id,
@@ -146,10 +191,9 @@ class EnrichmentRunner:
             total = service.load_excel(input_path)
             self.update_run(run_id, total_rows=total)
 
-            # Set repo in app.state for webhook endpoint (integrated into main API)
-            from .server import app
-            app.state.repo = service.repo
-            logger.info("Webhook endpoint ready at /webhook/apollo")
+            # Register repo so webhook endpoint can route to this run
+            self.register_repo(run_id, service.repo)
+            logger.info("Run %s registered for webhook routing", run_id)
 
             try:
                 # Phase 2: Lusha
@@ -167,13 +211,13 @@ class EnrichmentRunner:
                 await service.wait_for_webhooks()
                 self.update_from_service(run_id, service)
 
-            finally:
-                # Clear repo from app state when done
-                app.state.repo = None
+                # Phase 5: Export (must happen before unregister so late
+                # webhooks can still be routed during export)
+                self.update_run(run_id, status=RunStatus.EXPORTING)
+                service.export_excel(input_path, output_path)
 
-            # Phase 5: Export
-            self.update_run(run_id, status=RunStatus.EXPORTING)
-            service.export_excel(input_path, output_path)
+            finally:
+                self.unregister_repo(run_id)
 
             # Done
             self.update_run(
@@ -195,7 +239,20 @@ class EnrichmentRunner:
             )
 
         finally:
+            db_path = service._settings.db_path
             service.close()
+            # Clean up run-specific database file
+            try:
+                if db_path.exists():
+                    db_path.unlink()
+                # Also remove WAL and SHM files if present
+                for suffix in ("-wal", "-shm"):
+                    wal_path = db_path.parent / (db_path.name + suffix)
+                    if wal_path.exists():
+                        wal_path.unlink()
+                logger.info("Cleaned up database for run %s: %s", run_id, db_path)
+            except Exception:
+                logger.warning("Could not clean up database %s", db_path, exc_info=True)
             # Send callback to Power Automate (both success and failure)
             await self._send_callback(run_id)
 

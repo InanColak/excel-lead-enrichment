@@ -41,7 +41,10 @@ def with_retry(
                     last_exc = exc
                     if status == 429:
                         retry_after = exc.response.headers.get("Retry-After")
-                        wait = float(retry_after) if retry_after else backoff_base**attempt
+                        try:
+                            wait = float(retry_after) if retry_after else backoff_base**attempt
+                        except (ValueError, TypeError):
+                            wait = backoff_base**attempt
                     else:
                         wait = backoff_base**attempt
 

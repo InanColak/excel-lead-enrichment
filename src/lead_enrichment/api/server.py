@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
 
@@ -111,6 +112,11 @@ async def start_enrichment(
             raise HTTPException(
                 status_code=400, detail="File must be an Excel file (.xlsx)"
             )
+
+    # Sanitize filename to prevent path traversal
+    actual_filename = Path(actual_filename).name
+    if not actual_filename or actual_filename.startswith("."):
+        actual_filename = "upload.xlsx"
         content = await file.read()
     else:
         raise HTTPException(
@@ -137,6 +143,10 @@ async def start_enrichment(
             f.write(content)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to save file: {e}")
+
+    # Each run gets its own isolated database to prevent data leakage
+    run_db_path = Path("data") / f"enrichment_{run_id}.db"
+    settings = settings.model_copy(update={"db_path": run_db_path})
 
     # Create service and start background task
     service = EnrichmentService(settings)
@@ -257,29 +267,58 @@ async def receive_apollo_webhook(request: Request) -> JSONResponse:
     """Receive phone number data from Apollo.
 
     Apollo POSTs this payload asynchronously after a people/match call
-    with reveal_phone_number=true. We parse the phone numbers and
-    update the database via the handler.
+    with reveal_phone_number=true. Routes each person to the correct
+    run's database by looking up apollo_person_id across active repos.
     """
-    from ..webhook.handlers import handle_apollo_webhook
+    from ..utils.phone import classify_apollo_phones
 
     body = await request.json()
-    logger.info("Received Apollo webhook payload: %s", body)
-
-    # Get repo from app state (set by runner when enrichment starts)
-    repo = getattr(app.state, "repo", None)
-    if repo is None:
-        logger.warning("Webhook received but no active enrichment session")
-        return JSONResponse({"status": "no_session", "message": "No active enrichment"})
+    logger.info("Received Apollo webhook payload")
 
     try:
         payload = ApolloWebhookPayload.model_validate(body)
-        processed = handle_apollo_webhook(payload, repo)
-        logger.info("Processed %d person(s) from webhook", processed)
-        return JSONResponse({"status": "received", "processed": processed})
     except Exception:
-        logger.exception("Error processing Apollo webhook")
-        # Return 200 anyway so Apollo doesn't retry endlessly
+        logger.exception("Error parsing Apollo webhook payload")
         return JSONResponse({"status": "error"}, status_code=200)
+
+    processed = 0
+    for person in payload.people:
+        person_id = person.id
+        if not person_id:
+            logger.warning("Webhook person has no ID, skipping")
+            continue
+
+        # Find the correct repo for this person across all active runs
+        repo = runner.find_repo_for_person(person_id)
+        if repo is None:
+            logger.warning(
+                "No active run has webhook_tracking for apollo_person_id=%s",
+                person_id,
+            )
+            continue
+
+        raw_payload = json.dumps(person.model_dump(), ensure_ascii=False, default=str)
+        row_id = repo.mark_webhook_received(person_id, payload=raw_payload)
+        if row_id is None:
+            continue
+
+        phones = classify_apollo_phones(person.phone_numbers)
+        repo.update_apollo_phone_result(
+            row_id,
+            mobile=phones["mobile"],
+            direct=phones["direct_dial"],
+            raw_json=raw_payload,
+        )
+        logger.info(
+            "Updated row %d with Apollo phones: mobile=%s, direct=%s",
+            row_id,
+            phones["mobile"],
+            phones["direct_dial"],
+        )
+        processed += 1
+
+    logger.info("Processed %d person(s) from webhook", processed)
+    return JSONResponse({"status": "received", "processed": processed})
 
 
 @app.get("/webhook/apollo/health", tags=["Webhook"])
