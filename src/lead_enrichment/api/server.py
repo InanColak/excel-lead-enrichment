@@ -112,16 +112,16 @@ async def start_enrichment(
             raise HTTPException(
                 status_code=400, detail="File must be an Excel file (.xlsx)"
             )
-
-    # Sanitize filename to prevent path traversal
-    actual_filename = Path(actual_filename).name
-    if not actual_filename or actual_filename.startswith("."):
-        actual_filename = "upload.xlsx"
         content = await file.read()
     else:
         raise HTTPException(
             status_code=400, detail="No file provided. Send 'file' or 'file_base64'."
         )
+
+    # Sanitize filename to prevent path traversal
+    actual_filename = Path(actual_filename).name
+    if not actual_filename or actual_filename.startswith("."):
+        actual_filename = "upload.xlsx"
 
     try:
         settings = Settings()  # type: ignore[call-arg]
