@@ -32,7 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans:** 3 plans
 
 Plans:
-- [ ] 01-01-PLAN.md — Docker infrastructure, FastAPI skeleton, database models, Alembic migrations, health endpoint
+- [x] 01-01-PLAN.md — Docker infrastructure, FastAPI skeleton, database models, Alembic migrations, health endpoint
 - [ ] 01-02-PLAN.md — JWT authentication (login/refresh/logout), admin user management, Apollo API key config, CLI seed
 - [ ] 01-03-PLAN.md — Integration test suite for all Phase 1 requirements
 
