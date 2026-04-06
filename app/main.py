@@ -28,3 +28,8 @@ app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
 from app.admin.routes import router as admin_router
 
 app.include_router(admin_router, prefix="/api/v1/admin", tags=["admin"])
+
+# Jobs routes
+from app.jobs.routes import router as jobs_router
+
+app.include_router(jobs_router, prefix="/api/v1/jobs", tags=["jobs"])

@@ -5,6 +5,7 @@ services:
       target: development
     volumes:
       - ./app:/app/app
+      - ./data/uploads:/data/uploads
     ports:
       - "8000:8000"
       - "8001:8001"
@@ -21,3 +22,4 @@ services:
       target: development
     volumes:
       - ./app:/app/app
+      - ./data/uploads:/data/uploads

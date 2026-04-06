@@ -31,6 +31,8 @@ services:
       SECRET_KEY: ${SECRET_KEY}
     ports:
       - "8000:8000"
+    volumes:
+      - upload_data:/data/uploads
     depends_on:
       db:
         condition: service_healthy
@@ -48,6 +50,8 @@ services:
       context: .
       target: production
     command: celery -A app.celery_app worker --loglevel=info
+    volumes:
+      - upload_data:/data/uploads
     environment:
       DATABASE_URL: postgresql+asyncpg://leadenrich:${DB_PASSWORD}@db:5432/leadenrich
       REDIS_URL: redis://redis:6379/0
@@ -74,3 +78,4 @@ services:
 
 volumes:
   postgres_data:
+  upload_data:
