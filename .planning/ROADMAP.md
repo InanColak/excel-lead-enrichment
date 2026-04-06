@@ -46,7 +46,12 @@ Plans:
   3. The API returns auto-detected column mappings with confidence indicators for a successfully parsed file
   4. A user can submit corrected column mappings via API override before enrichment starts
   5. Every parsed row has a unique UUID assigned before any downstream processing; malformed rows are flagged per-row without aborting the job
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [x] 02-01-PLAN.md — Job/JobRow models, file upload endpoint, Excel parsing, validation (FILE-01, FILE-02, FILE-05)
+- [ ] 02-02-PLAN.md — Column detection engine, mapping review/override endpoints, confirm flow (FILE-03, FILE-04, FILE-05)
+- [ ] 02-03-PLAN.md — Integration test suite for all Phase 2 requirements
 
 ### Phase 3: Enrichment Pipeline
 **Goal**: Submitting a confirmed job triggers background processing that enriches every resolvable contact via the local database cache first and Apollo second — handling Apollo's two-stage response (email in the immediate API response, phone number delivered asynchronously via webhook) — writes all results per row by UUID, and produces a downloadable enriched Excel file once both stages are complete
@@ -84,6 +89,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-04-06 |
-| 2. File Ingestion | 0/TBD | Not started | - |
+| 2. File Ingestion | 0/3 | Planned | - |
 | 3. Enrichment Pipeline | 0/TBD | Not started | - |
 | 4. Job Output and History | 0/TBD | Not started | - |

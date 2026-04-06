@@ -9,11 +9,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### File Processing
 
-- [ ] **FILE-01**: User can upload Excel files (.xlsx/.xls) via the REST API
-- [ ] **FILE-02**: System validates uploaded file on receipt (format, size limit, sheet structure) and rejects invalid files with clear error messages
+- [x] **FILE-01**: User can upload Excel files (.xlsx/.xls) via the REST API
+- [x] **FILE-02**: System validates uploaded file on receipt (format, size limit, sheet structure) and rejects invalid files with clear error messages
 - [ ] **FILE-03**: System auto-detects column types (first name, last name, company, LinkedIn URL, email) from headers and content sampling
 - [ ] **FILE-04**: User can review and override auto-detected column mappings via API before enrichment starts
-- [ ] **FILE-05**: System handles bad/malformed rows gracefully without failing the entire job (per-row error tracking)
+- [x] **FILE-05**: System handles bad/malformed rows gracefully without failing the entire job (per-row error tracking)
 
 ### Enrichment Pipeline
 
@@ -94,11 +94,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FILE-01 | Phase 2 | Pending |
-| FILE-02 | Phase 2 | Pending |
+| FILE-01 | Phase 2 | Complete |
+| FILE-02 | Phase 2 | Complete |
 | FILE-03 | Phase 2 | Pending |
 | FILE-04 | Phase 2 | Pending |
-| FILE-05 | Phase 2 | Pending |
+| FILE-05 | Phase 2 | Complete |
 | ENRICH-01 | Phase 3 | Pending |
 | ENRICH-02 | Phase 3 | Pending |
 | ENRICH-03 | Phase 3 | Pending |
