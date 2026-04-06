@@ -50,7 +50,7 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md — Job/JobRow models, file upload endpoint, Excel parsing, validation (FILE-01, FILE-02, FILE-05)
-- [ ] 02-02-PLAN.md — Column detection engine, mapping review/override endpoints, confirm flow (FILE-03, FILE-04, FILE-05)
+- [x] 02-02-PLAN.md — Column detection engine, mapping review/override endpoints, confirm flow (FILE-03, FILE-04, FILE-05)
 - [ ] 02-03-PLAN.md — Integration test suite for all Phase 2 requirements
 
 ### Phase 3: Enrichment Pipeline
