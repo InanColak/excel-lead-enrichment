@@ -29,7 +29,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A user can obtain a JWT by posting valid email and password credentials
   4. An admin can set the shared Apollo API key via API endpoint without redeployment
   5. An admin can add a new user and that user can immediately log in; an admin can remove a user and that user's token is no longer accepted
-**Plans**: TBD
+**Plans:** 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Docker infrastructure, FastAPI skeleton, database models, Alembic migrations, health endpoint
+- [ ] 01-02-PLAN.md — JWT authentication (login/refresh/logout), admin user management, Apollo API key config, CLI seed
+- [ ] 01-03-PLAN.md — Integration test suite for all Phase 1 requirements
 
 ### Phase 2: File Ingestion
 **Goal**: Users can upload Excel files, receive validated parse results with auto-detected column mappings, override those mappings, and confirm before enrichment begins — with every row assigned a unique UUID
@@ -78,7 +83,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/TBD | Not started | - |
+| 1. Foundation | 0/3 | Planning complete | - |
 | 2. File Ingestion | 0/TBD | Not started | - |
 | 3. Enrichment Pipeline | 0/TBD | Not started | - |
 | 4. Job Output and History | 0/TBD | Not started | - |
