@@ -46,7 +46,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 ### Phase 3: Enrichment Pipeline
 **Goal**: Submitting a confirmed job triggers background processing that enriches every resolvable contact via the local database cache first and Apollo second — handling Apollo's two-stage response (email in the immediate API response, phone number delivered asynchronously via webhook) — writes all results per row by UUID, and produces a downloadable enriched Excel file once both stages are complete
 **Depends on**: Phase 2
-**Requirements**: ENRICH-01, ENRICH-02, ENRICH-03, ENRICH-04, ENRICH-05, ENRICH-06, ENRICH-07, ENRICH-08, ENRICH-09, ENRICH-10, ENRICH-11
+**Requirements**: ENRICH-01, ENRICH-02, ENRICH-03, ENRICH-04, ENRICH-05, ENRICH-06, ENRICH-07, ENRICH-08, ENRICH-09, ENRICH-10, ENRICH-11, JOB-01
 **Success Criteria** (what must be TRUE):
   1. A job with 1,000+ rows processes entirely in the background; the web server returns immediately after job submission
   2. Contacts already in the local database are returned without an Apollo API call (verified by zero increment in API call counter for those rows)

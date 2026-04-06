@@ -29,6 +29,10 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **ENRICH-10**: System tracks per-job metrics (cache hits, cache misses, API calls made, credits consumed, webhook callbacks received, webhook timeouts)
 - [ ] **ENRICH-11**: System exposes a webhook receiver endpoint that accepts Apollo phone-data callbacks, authenticates them, correlates them to the correct pending contact by Apollo's lookup ID, and handles delivery failures — if no webhook arrives within the configured timeout the row completes with email only and the timeout is recorded
 
+### Job Lifecycle
+
+- [ ] **JOB-01**: System assigns a unique job ID on upload that tracks the job through its full lifecycle (PENDING_CONFIRMATION → PROCESSING → AWAITING_WEBHOOKS → COMPLETE / PARTIAL / FAILED), and all rows, webhook callbacks, metrics, and downloadable outputs are keyed to this job ID
+
 ### Output & History
 
 - [ ] **OUTPUT-01**: User can download enriched Excel file with original columns plus email, phone, and status columns appended; rows that timed out waiting for webhook phone data show a blank phone cell rather than an error
@@ -106,6 +110,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ENRICH-09 | Phase 3 | Pending |
 | ENRICH-10 | Phase 3 | Pending |
 | ENRICH-11 | Phase 3 | Pending |
+| JOB-01 | Phase 3 | Pending |
 | OUTPUT-01 | Phase 4 | Pending |
 | OUTPUT-02 | Phase 4 | Pending |
 | OUTPUT-03 | Phase 4 | Pending |
@@ -118,8 +123,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | INFRA-03 | Phase 1 | Pending |
 
 **Coverage:**
-- v1 requirements: 26 total
-- Mapped to phases: 26
+- v1 requirements: 27 total
+- Mapped to phases: 27
 - Unmapped: 0
 
 ---
