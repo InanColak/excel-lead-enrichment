@@ -658,17 +658,19 @@ app.include_router(admin_router, prefix="/api/v1/admin", tags=["admin"])
 | A3 | Redis 7-alpine Docker image is sufficient for both Celery broker and token blocklist | Standard Stack | LOW -- standard Redis supports all needed commands |
 | A4 | Flower 2.0.1 works with Celery 5.6.x | Standard Stack | MEDIUM -- Flower sometimes lags behind Celery releases. If incompatible, pin Flower to latest compatible version |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **pwdlib bcrypt vs argon2 for password hashing**
    - What we know: FastAPI docs default to argon2. CLAUDE.md says bcrypt. Both are secure.
    - What's unclear: Whether the user has a strong preference for bcrypt specifically, or just wants "secure password hashing."
    - Recommendation: Use `pwdlib[bcrypt]` to match CLAUDE.md's `passlib[bcrypt]` intent. Bcrypt is well-understood and sufficient for this use case.
+   - **RESOLVED:** Use `pwdlib[bcrypt]` per CLAUDE.md intent. Implemented in Plan 01-02 (app/auth/service.py).
 
 2. **Apollo API key storage: encrypted or plaintext?**
    - What we know: D-02/AUTH-02 says "admin can configure the shared Apollo API key via API endpoint." The key is sensitive.
    - What's unclear: Whether the key should be encrypted at rest in the database or stored as plaintext (protected by DB access controls only).
    - Recommendation: Store encrypted (using Fernet symmetric encryption with the app's SECRET_KEY). Low effort, meaningful security improvement.
+   - **RESOLVED:** Store encrypted using Fernet symmetric encryption with SECRET_KEY. Implemented in Plan 01-02 (app/admin/service.py).
 
 ## Environment Availability
 
