@@ -12,31 +12,30 @@ Every uploaded Excel file comes back with accurate email addresses and phone num
 
 ### Validated
 
-(None yet — ship to validate)
+- [x] Upload Excel files with mixed/varying column formats — Validated in Phase 2: File Ingestion
+- [x] Auto-detect column types (name, company, LinkedIn URL, etc.) with manual override — Validated in Phase 2: File Ingestion
+- [x] Row-level tracking with unique IDs through the pipeline — Validated in Phase 2: File Ingestion
+- [x] Original uploaded file preserved (never modified) — Validated in Phase 2: File Ingestion
+- [x] Excel validation on upload (size limits, format checks, graceful bad-row handling) — Validated in Phase 2: File Ingestion
+- [x] Simple email/password authentication for the team — Validated in Phase 1: Foundation
+- [x] Admin-managed shared Apollo API key configuration — Validated in Phase 1: Foundation
+- [x] Team management (add/remove users) — Validated in Phase 1: Foundation
+- [x] Docker-based deployment — Validated in Phase 1: Foundation
 
 ### Active
 
-- [ ] Upload Excel files with mixed/varying column formats
-- [ ] Auto-detect column types (name, company, LinkedIn URL, etc.) with manual override
 - [ ] Enrich contacts via Apollo People Enrichment API (email + phone)
 - [ ] Local contact database that grows with each enrichment job
 - [ ] Database-first lookup before any API call to prevent credit waste
 - [ ] Deduplication within a single upload (same person = one API call)
 - [ ] Background processing for large files (1,000+ rows)
-- [ ] Row-level tracking with unique IDs through the pipeline
 - [ ] Job isolation for concurrent multi-user processing
 - [ ] Download enriched Excel with original data + email/phone columns appended
 - [ ] Job history with full results (re-downloadable)
 - [ ] Contact database browser
 - [ ] Usage stats dashboard (API credits used, cache hits, jobs run)
-- [ ] Simple email/password authentication for the team
-- [ ] Admin-managed shared Apollo API key configuration
-- [ ] Team management (add/remove users)
 - [ ] "Not found" status column for rows Apollo couldn't resolve
 - [ ] Force re-enrichment option per job (override database cache)
-- [ ] Original uploaded file preserved (never modified)
-- [ ] Excel validation on upload (size limits, format checks, graceful bad-row handling)
-- [ ] Docker-based deployment
 
 ### Out of Scope
 
@@ -95,4 +94,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 after initialization*
+*Last updated: 2026-04-06 after Phase 2 (File Ingestion) completion*
