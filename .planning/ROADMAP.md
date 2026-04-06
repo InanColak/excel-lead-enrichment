@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Docker infrastructure, FastAPI skeleton, database models, Alembic migrations, health endpoint
 - [ ] 01-02-PLAN.md — JWT authentication (login/refresh/logout), admin user management, Apollo API key config, CLI seed
-- [ ] 01-03-PLAN.md — Integration test suite for all Phase 1 requirements
+- [x] 01-03-PLAN.md — Integration test suite for all Phase 1 requirements
 
 ### Phase 2: File Ingestion
 **Goal**: Users can upload Excel files, receive validated parse results with auto-detected column mappings, override those mappings, and confirm before enrichment begins — with every row assigned a unique UUID

@@ -41,9 +41,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Authentication & Admin
 
-- [ ] **AUTH-01**: User can log in with email and password
-- [ ] **AUTH-02**: Admin can configure the shared Apollo API key via API endpoint (without redeployment)
-- [ ] **AUTH-03**: Admin can add and remove team members
+- [x] **AUTH-01**: User can log in with email and password
+- [x] **AUTH-02**: Admin can configure the shared Apollo API key via API endpoint (without redeployment)
+- [x] **AUTH-03**: Admin can add and remove team members
 - [ ] **AUTH-04**: User can query usage stats via API (credits used, cache hit rate, jobs run over time)
 
 ### Infrastructure
@@ -114,9 +114,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | OUTPUT-01 | Phase 4 | Pending |
 | OUTPUT-02 | Phase 4 | Pending |
 | OUTPUT-03 | Phase 4 | Pending |
-| AUTH-01 | Phase 1 | Pending |
-| AUTH-02 | Phase 1 | Pending |
-| AUTH-03 | Phase 1 | Pending |
+| AUTH-01 | Phase 1 | Complete |
+| AUTH-02 | Phase 1 | Complete |
+| AUTH-03 | Phase 1 | Complete |
 | AUTH-04 | Phase 4 | Pending |
 | INFRA-01 | Phase 1 | Complete |
 | INFRA-02 | Phase 1 | Complete |
