@@ -38,3 +38,32 @@ class UploadResponse(BaseModel):
     valid_rows: int
     error_rows: int
     message: str
+
+
+class ColumnMappingEntry(BaseModel):
+    column: str
+    detected_type: str
+    confidence: str
+
+
+class ColumnMappingsResponse(BaseModel):
+    job_id: uuid.UUID
+    mappings: list[ColumnMappingEntry]
+
+
+class ColumnMappingOverride(BaseModel):
+    column: str
+    mapped_type: str
+
+
+class ColumnMappingsOverrideRequest(BaseModel):
+    mappings: list[ColumnMappingOverride]
+
+
+class ConfirmResponse(BaseModel):
+    job_id: uuid.UUID
+    status: str
+    total_rows: int
+    valid_rows: int
+    error_rows: int
+    message: str

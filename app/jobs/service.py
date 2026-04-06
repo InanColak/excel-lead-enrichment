@@ -7,6 +7,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
+from app.jobs.detection import (
+    COLUMN_TYPES,
+    detect_column_types,
+    get_contact_identifier_columns,
+)
 from app.jobs.models import Job, JobRow, JobStatus, RowStatus
 
 
@@ -214,5 +219,183 @@ async def get_job_by_id(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Job not found.",
         )
+
+    return job
+
+
+def _require_pending_confirmation(job: Job) -> None:
+    """Raise 409 if job is not in PENDING_CONFIRMATION status."""
+    if job.status != JobStatus.PENDING_CONFIRMATION.value:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Job is in '{job.status}' status. Expected 'pending_confirmation'.",
+        )
+
+
+async def get_column_mappings(
+    db: AsyncSession, job_id: uuid.UUID, user_id: uuid.UUID
+) -> list[dict]:
+    """Detect or return cached column mappings for a job.
+
+    On first call, runs auto-detection on sample rows and caches in job.column_mappings.
+    Subsequent calls return cached mappings.
+
+    Raises HTTPException(404) if job not found or wrong user.
+    Raises HTTPException(409) if job is not in PENDING_CONFIRMATION status.
+    """
+    job = await get_job_by_id(db, job_id, user_id)
+    _require_pending_confirmation(job)
+
+    # Return cached mappings if already detected/overridden
+    if job.column_mappings is not None:
+        return job.column_mappings
+
+    # Load sample rows for detection (first 20)
+    result = await db.execute(
+        select(JobRow)
+        .where(JobRow.job_id == job_id)
+        .order_by(JobRow.row_index)
+        .limit(20)
+    )
+    sample_job_rows = result.scalars().all()
+
+    if not sample_job_rows:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Job has no rows to detect columns from.",
+        )
+
+    # Extract headers from first row's raw_data keys and build sample dicts
+    headers = list(sample_job_rows[0].raw_data.keys())
+    sample_rows = [row.raw_data for row in sample_job_rows]
+
+    # Run detection
+    mappings = detect_column_types(headers, sample_rows)
+
+    # Cache in job.column_mappings
+    job.column_mappings = mappings
+    await db.flush()
+
+    return mappings
+
+
+async def override_column_mappings(
+    db: AsyncSession,
+    job_id: uuid.UUID,
+    user_id: uuid.UUID,
+    overrides: list,
+) -> list[dict]:
+    """Override column mappings for a job.
+
+    Merges overrides with existing mappings — only specified columns are updated.
+
+    Raises HTTPException(404) if job not found or wrong user.
+    Raises HTTPException(409) if job is not in PENDING_CONFIRMATION status.
+    Raises HTTPException(422) if any mapped_type is not in COLUMN_TYPES.
+    """
+    job = await get_job_by_id(db, job_id, user_id)
+    _require_pending_confirmation(job)
+
+    # Validate all mapped_type values
+    for override in overrides:
+        if override.mapped_type not in COLUMN_TYPES:
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                detail=f"Invalid column type '{override.mapped_type}'. Must be one of: {COLUMN_TYPES}",
+            )
+
+    # Ensure we have base mappings to merge with
+    if job.column_mappings is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No column mappings detected yet. Call GET /mappings first.",
+        )
+
+    # Build override lookup
+    override_map = {o.column: o.mapped_type for o in overrides}
+
+    # Merge: update only specified columns
+    updated_mappings = []
+    for mapping in job.column_mappings:
+        if mapping["column"] in override_map:
+            updated_mappings.append(
+                {
+                    "column": mapping["column"],
+                    "detected_type": override_map[mapping["column"]],
+                    "confidence": "HIGH",  # User override is highest confidence
+                }
+            )
+        else:
+            updated_mappings.append(mapping)
+
+    job.column_mappings = updated_mappings
+    await db.flush()
+
+    return updated_mappings
+
+
+async def confirm_job(
+    db: AsyncSession, job_id: uuid.UUID, user_id: uuid.UUID
+) -> Job:
+    """Confirm a job's column mappings and flag malformed rows.
+
+    Transitions job to CONFIRMED status. Rows with no contact identifiers
+    are flagged as ERROR with a descriptive message.
+
+    Raises HTTPException(404) if job not found or wrong user.
+    Raises HTTPException(409) if job is not in PENDING_CONFIRMATION status.
+    Raises HTTPException(400) if column_mappings not set.
+    """
+    job = await get_job_by_id(db, job_id, user_id)
+    _require_pending_confirmation(job)
+
+    if job.column_mappings is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Column mappings not set. Call GET /mappings first to detect columns.",
+        )
+
+    # Determine which columns are mapped to contact identifier types
+    identifier_types = get_contact_identifier_columns()
+    identifier_columns = [
+        m["column"]
+        for m in job.column_mappings
+        if m["detected_type"] in identifier_types
+    ]
+
+    # Load all rows for this job
+    result = await db.execute(
+        select(JobRow)
+        .where(JobRow.job_id == job_id)
+        .order_by(JobRow.row_index)
+    )
+    all_rows = result.scalars().all()
+
+    valid_count = 0
+    error_count = 0
+
+    for row in all_rows:
+        # Check if any identifier column has a non-empty value
+        has_identifier = False
+        for col in identifier_columns:
+            val = row.raw_data.get(col)
+            if val is not None and str(val).strip():
+                has_identifier = True
+                break
+
+        if not has_identifier:
+            row.status = RowStatus.ERROR.value
+            row.error_message = f"No contact identifiers found in row {row.row_index}"
+            error_count += 1
+        else:
+            # Keep as PENDING for enrichment
+            valid_count += 1
+
+    # Update job status and counts
+    job.status = JobStatus.CONFIRMED.value
+    job.valid_rows = valid_count
+    job.error_rows = error_count
+
+    await db.flush()
 
     return job
