@@ -67,8 +67,13 @@ Plans:
   7. For contacts Apollo resolves, the email field is populated from the immediate API response; the phone field is populated only after the Apollo webhook delivers it — the pipeline waits for the webhook before marking a contact complete
   8. If Apollo's webhook does not deliver phone data within the configured timeout, the row is marked complete with the email populated and phone left blank (not held indefinitely); the timeout and the absence of phone data are recorded in per-job metrics
   9. The webhook receiver endpoint authenticates incoming Apollo callbacks and rejects unauthenticated or malformed payloads without corrupting job state
-**Plans**: TBD
-**UI hint**: no
+**Plans:** 4 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — DB migrations (Job metrics, Contact apollo_id, linkedin_url index), Settings, Apollo client with tenacity retry
+- [ ] 03-02-PLAN.md — Enrichment service orchestration (dedup, DB lookup, Apollo calls, result writing) and Celery tasks
+- [ ] 03-03-PLAN.md — Webhook receiver endpoint with shared-secret auth, phone data correlation
+- [ ] 03-04-PLAN.md — Integration test suite for all Phase 3 requirements
 
 ### Phase 4: Job Output and History
 **Goal**: Users can poll job progress, download enriched files, retrieve any past job result, and view usage stats showing API credits consumed and cache performance
@@ -90,5 +95,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. Foundation | 3/3 | Complete | 2026-04-06 |
 | 2. File Ingestion | 0/3 | Planned | - |
-| 3. Enrichment Pipeline | 0/TBD | Not started | - |
+| 3. Enrichment Pipeline | 0/4 | Planned | - |
 | 4. Job Output and History | 0/TBD | Not started | - |
