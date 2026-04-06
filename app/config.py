@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
     admin_email: str = "admin@example.com"
     admin_password: str = "changeme"
+    upload_dir: str = "/data/uploads"
+    max_upload_size_mb: int = 10
+    max_rows_per_file: int = 10000
     debug: bool = False
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}

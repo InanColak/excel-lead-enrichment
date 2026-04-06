@@ -6,5 +6,6 @@ from app.models.base import Base
 import app.auth.models as _auth_models  # noqa: F401, E402
 import app.admin.models as _admin_models  # noqa: F401, E402
 import app.contacts.models as _contacts_models  # noqa: F401, E402
+import app.jobs.models as _jobs_models  # noqa: F401, E402
 
 __all__ = ["Base"]
