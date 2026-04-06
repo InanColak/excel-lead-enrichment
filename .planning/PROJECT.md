@@ -74,6 +74,8 @@ Every uploaded Excel file comes back with accurate email addresses and phone num
 | Row-level unique ID tracking | Prevents data mix-ups in enrichment pipeline | — Pending |
 | Job isolation for concurrency | Prevents data corruption when multiple users process simultaneously | — Pending |
 | Docker deployment | Portable, consistent environment, deploy anywhere | — Pending |
+| API-only, no frontend | This is one of several company apps; a unified dashboard will consume APIs later. Swagger UI for now. | — Pending |
+| API gateway pattern for future dashboard | Each app exposes its own REST API; dashboard aggregates. No DB coupling between apps. | — Pending |
 
 ## Evolution
 
