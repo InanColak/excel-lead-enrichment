@@ -23,3 +23,8 @@ app.include_router(health_router)
 from app.auth.routes import router as auth_router
 
 app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
+
+# Admin routes
+from app.admin.routes import router as admin_router
+
+app.include_router(admin_router, prefix="/api/v1/admin", tags=["admin"])
