@@ -19,4 +19,7 @@ app.add_middleware(
 # Health endpoint at root level (no /api/v1 prefix) for Docker healthcheck
 app.include_router(health_router)
 
-# Auth and admin routers will be added in Plan 02 under /api/v1/ prefix
+# Auth routes
+from app.auth.routes import router as auth_router
+
+app.include_router(auth_router, prefix="/api/v1/auth", tags=["auth"])
