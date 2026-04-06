@@ -20,17 +20,18 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **ENRICH-01**: System assigns a unique UUID to each row at parse time, tracked through the entire pipeline
 - [ ] **ENRICH-02**: System deduplicates contacts within a single upload (same person = one API call, result fanned to all matching rows)
 - [ ] **ENRICH-03**: System checks local contact database first before making any Apollo API call
-- [ ] **ENRICH-04**: System calls Apollo People Enrichment API for contacts not found in local database, returning email and phone number
-- [ ] **ENRICH-05**: System stores all Apollo enrichment results in the local contact database for future lookups
+- [ ] **ENRICH-04**: System calls Apollo People Enrichment API for contacts not found in local database; the immediate API response returns email, while phone number is delivered asynchronously via Apollo webhook callback
+- [ ] **ENRICH-05**: System stores all Apollo enrichment results (email from immediate response, phone from webhook) in the local contact database for future lookups
 - [ ] **ENRICH-06**: System marks rows where Apollo returns no match with a "not found" status column
 - [ ] **ENRICH-07**: System processes large files (1,000+ rows) as background jobs with progress tracking
 - [ ] **ENRICH-08**: System isolates concurrent jobs so multiple users can process simultaneously without data corruption
 - [ ] **ENRICH-09**: System preserves the original uploaded file (never modified)
-- [ ] **ENRICH-10**: System tracks per-job metrics (cache hits, cache misses, API calls made, credits consumed)
+- [ ] **ENRICH-10**: System tracks per-job metrics (cache hits, cache misses, API calls made, credits consumed, webhook callbacks received, webhook timeouts)
+- [ ] **ENRICH-11**: System exposes a webhook receiver endpoint that accepts Apollo phone-data callbacks, authenticates them, correlates them to the correct pending contact by Apollo's lookup ID, and handles delivery failures — if no webhook arrives within the configured timeout the row completes with email only and the timeout is recorded
 
 ### Output & History
 
-- [ ] **OUTPUT-01**: User can download enriched Excel file with original columns plus email, phone, and status columns appended
+- [ ] **OUTPUT-01**: User can download enriched Excel file with original columns plus email, phone, and status columns appended; rows that timed out waiting for webhook phone data show a blank phone cell rather than an error
 - [ ] **OUTPUT-02**: User can query real-time job status and progress via API endpoint
 - [ ] **OUTPUT-03**: User can list job history and re-download results from any past enrichment job via API
 
@@ -89,37 +90,38 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FILE-01 | — | Pending |
-| FILE-02 | — | Pending |
-| FILE-03 | — | Pending |
-| FILE-04 | — | Pending |
-| FILE-05 | — | Pending |
-| ENRICH-01 | — | Pending |
-| ENRICH-02 | — | Pending |
-| ENRICH-03 | — | Pending |
-| ENRICH-04 | — | Pending |
-| ENRICH-05 | — | Pending |
-| ENRICH-06 | — | Pending |
-| ENRICH-07 | — | Pending |
-| ENRICH-08 | — | Pending |
-| ENRICH-09 | — | Pending |
-| ENRICH-10 | — | Pending |
-| OUTPUT-01 | — | Pending |
-| OUTPUT-02 | — | Pending |
-| OUTPUT-03 | — | Pending |
-| AUTH-01 | — | Pending |
-| AUTH-02 | — | Pending |
-| AUTH-03 | — | Pending |
-| AUTH-04 | — | Pending |
-| INFRA-01 | — | Pending |
-| INFRA-02 | — | Pending |
-| INFRA-03 | — | Pending |
+| FILE-01 | Phase 2 | Pending |
+| FILE-02 | Phase 2 | Pending |
+| FILE-03 | Phase 2 | Pending |
+| FILE-04 | Phase 2 | Pending |
+| FILE-05 | Phase 2 | Pending |
+| ENRICH-01 | Phase 3 | Pending |
+| ENRICH-02 | Phase 3 | Pending |
+| ENRICH-03 | Phase 3 | Pending |
+| ENRICH-04 | Phase 3 | Pending |
+| ENRICH-05 | Phase 3 | Pending |
+| ENRICH-06 | Phase 3 | Pending |
+| ENRICH-07 | Phase 3 | Pending |
+| ENRICH-08 | Phase 3 | Pending |
+| ENRICH-09 | Phase 3 | Pending |
+| ENRICH-10 | Phase 3 | Pending |
+| ENRICH-11 | Phase 3 | Pending |
+| OUTPUT-01 | Phase 4 | Pending |
+| OUTPUT-02 | Phase 4 | Pending |
+| OUTPUT-03 | Phase 4 | Pending |
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| AUTH-03 | Phase 1 | Pending |
+| AUTH-04 | Phase 4 | Pending |
+| INFRA-01 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Pending |
+| INFRA-03 | Phase 1 | Pending |
 
 **Coverage:**
-- v1 requirements: 25 total
-- Mapped to phases: 0
-- Unmapped: 25
+- v1 requirements: 26 total
+- Mapped to phases: 26
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-04-06*
-*Last updated: 2026-04-06 after initial definition*
+*Last updated: 2026-04-06 after roadmap revision — added ENRICH-11 (Apollo webhook receiver), updated ENRICH-04, ENRICH-05, ENRICH-10, OUTPUT-01 to reflect two-stage Apollo response model*
