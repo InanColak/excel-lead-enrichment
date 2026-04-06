@@ -12,7 +12,7 @@ LeadEnrich is built in four sequential phases. Phase 1 establishes the foundatio
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Foundation** - Docker infrastructure, database schema, auth, admin config, and team management
+- [x] **Phase 1: Foundation** - Docker infrastructure, database schema, auth, admin config, and team management
 - [ ] **Phase 2: File Ingestion** - Upload, validation, column detection, manual override, and row UUID assignment
 - [ ] **Phase 3: Enrichment Pipeline** - Celery workers, DB-first cache, Apollo API client, async webhook receiver for phone data, deduplication, and enriched output generation
 - [ ] **Phase 4: Job Output and History** - Job status polling, job history, re-downloads, and usage stats dashboard
@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md — Docker infrastructure, FastAPI skeleton, database models, Alembic migrations, health endpoint
-- [ ] 01-02-PLAN.md — JWT authentication (login/refresh/logout), admin user management, Apollo API key config, CLI seed
+- [x] 01-02-PLAN.md — JWT authentication (login/refresh/logout), admin user management, Apollo API key config, CLI seed
 - [x] 01-03-PLAN.md — Integration test suite for all Phase 1 requirements
 
 ### Phase 2: File Ingestion
@@ -83,7 +83,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 0/3 | Planning complete | - |
+| 1. Foundation | 3/3 | Complete | 2026-04-06 |
 | 2. File Ingestion | 0/TBD | Not started | - |
 | 3. Enrichment Pipeline | 0/TBD | Not started | - |
 | 4. Job Output and History | 0/TBD | Not started | - |
