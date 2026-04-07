@@ -49,6 +49,7 @@ class Job(Base, UUIDMixin, TimestampMixin):
     api_calls: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     webhook_callbacks_received: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     webhook_timeouts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    output_file_path: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
 
 
 class JobRow(Base, UUIDMixin, TimestampMixin):
