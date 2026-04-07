@@ -20,6 +20,7 @@ from app.config import settings
 from app.contacts.models import Contact
 from app.enrichment.service import process_job
 from app.jobs.models import Job, JobRow, RowStatus
+from app.jobs.output import generate_output_file
 
 logger = logging.getLogger(__name__)
 
@@ -174,6 +175,11 @@ async def _check_webhook_completion_async(
             job.status = "complete"
 
         await db.commit()
+
+        # Generate output file for complete/partial jobs (per D-64)
+        if job.status in ("complete", "partial"):
+            await generate_output_file(job_uuid, session_factory)
+
         logger.info(
             f"Job {job_id} finalized: status={job.status}, "
             f"webhook_timeouts={webhook_timeouts}"
