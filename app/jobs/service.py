@@ -1,9 +1,10 @@
 import uuid
+from datetime import datetime
 from pathlib import Path
 
 from fastapi import HTTPException, UploadFile, status
 from openpyxl import load_workbook
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -405,3 +406,96 @@ async def confirm_job(
     process_enrichment_job.delay(str(job.id))
 
     return job
+
+
+async def list_jobs(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    limit: int = 20,
+    offset: int = 0,
+    status_filter: str | None = None,
+    created_after: datetime | None = None,
+    created_before: datetime | None = None,
+) -> tuple[list[Job], int]:
+    """List jobs for a user with pagination, status filter, and date range filter.
+
+    Returns (jobs, total_count).
+    """
+    base_filter = [Job.user_id == user_id]
+
+    if status_filter:
+        base_filter.append(Job.status == status_filter)
+    if created_after:
+        base_filter.append(Job.created_at >= created_after)
+    if created_before:
+        base_filter.append(Job.created_at <= created_before)
+
+    count_query = select(func.count()).select_from(Job).where(*base_filter)
+    total = (await db.execute(count_query)).scalar() or 0
+
+    query = (
+        select(Job)
+        .where(*base_filter)
+        .order_by(Job.created_at.desc())
+        .offset(offset)
+        .limit(limit)
+    )
+    jobs = (await db.execute(query)).scalars().all()
+
+    return list(jobs), total
+
+
+async def get_user_stats(
+    db: AsyncSession,
+    user_id: uuid.UUID,
+    since: datetime | None = None,
+    until: datetime | None = None,
+) -> dict:
+    """Aggregate usage statistics for a user.
+
+    Returns dict with total_jobs, total_api_calls, total_cache_hits,
+    cache_hit_rate_percent, total_webhook_callbacks, total_webhook_timeouts,
+    jobs_by_status.
+    """
+    base_filter = [Job.user_id == user_id]
+    if since:
+        base_filter.append(Job.created_at >= since)
+    if until:
+        base_filter.append(Job.created_at <= until)
+
+    # Aggregation query
+    agg_query = select(
+        func.count(Job.id).label("total_jobs"),
+        func.coalesce(func.sum(Job.api_calls), 0).label("total_api_calls"),
+        func.coalesce(func.sum(Job.cache_hits), 0).label("total_cache_hits"),
+        func.coalesce(func.sum(Job.webhook_callbacks_received), 0).label("total_webhook_callbacks"),
+        func.coalesce(func.sum(Job.webhook_timeouts), 0).label("total_webhook_timeouts"),
+    ).where(*base_filter)
+
+    result = await db.execute(agg_query)
+    row = result.one()
+
+    total_api_calls = row.total_api_calls
+    total_cache_hits = row.total_cache_hits
+    total_lookups = total_api_calls + total_cache_hits
+    # Pitfall 5: zero-division guard
+    cache_hit_rate = round((total_cache_hits / total_lookups * 100), 1) if total_lookups > 0 else 0.0
+
+    # Jobs by status breakdown
+    status_query = (
+        select(Job.status, func.count(Job.id))
+        .where(*base_filter)
+        .group_by(Job.status)
+    )
+    status_result = await db.execute(status_query)
+    jobs_by_status = {s: count for s, count in status_result.all()}
+
+    return {
+        "total_jobs": row.total_jobs,
+        "total_api_calls": total_api_calls,
+        "total_cache_hits": total_cache_hits,
+        "cache_hit_rate_percent": cache_hit_rate,
+        "total_webhook_callbacks": row.total_webhook_callbacks,
+        "total_webhook_timeouts": row.total_webhook_timeouts,
+        "jobs_by_status": jobs_by_status,
+    }

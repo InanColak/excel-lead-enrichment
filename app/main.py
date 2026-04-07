@@ -34,6 +34,11 @@ from app.jobs.routes import router as jobs_router
 
 app.include_router(jobs_router, prefix="/api/v1/jobs", tags=["jobs"])
 
+# Stats routes (separate prefix per D-62)
+from app.jobs.routes import stats_router
+
+app.include_router(stats_router, prefix="/api/v1/stats", tags=["stats"])
+
 # Webhook routes (no JWT auth — uses shared secret per D-42/D-45)
 from app.enrichment.routes import router as webhook_router
 
