@@ -6,6 +6,9 @@ services:
     volumes:
       - ./app:/app/app
       - ./data/uploads:/data/uploads
+      - ./alembic.ini:/app/alembic.ini
+      - ./alembic:/app/alembic
+      - ./scripts:/app/scripts
     ports:
       - "8000:8000"
       - "8001:8001"
@@ -14,7 +17,9 @@ services:
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY}
       DEBUG: "true"
-    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+    command: bash /app/scripts/dev-entrypoint.sh
 
   worker:
     build:
@@ -23,3 +28,5 @@ services:
     volumes:
       - ./app:/app/app
       - ./data/uploads:/data/uploads
+      - ./alembic.ini:/app/alembic.ini
+      - ./alembic:/app/alembic
