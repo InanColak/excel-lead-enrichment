@@ -21,20 +21,20 @@ Every uploaded Excel file comes back with accurate email addresses and phone num
 - [x] Admin-managed shared Apollo API key configuration — Validated in Phase 1: Foundation
 - [x] Team management (add/remove users) — Validated in Phase 1: Foundation
 - [x] Docker-based deployment — Validated in Phase 1: Foundation
+- [x] Enrich contacts via Apollo People Enrichment API (email + phone) — Validated in Phase 3: Enrichment Pipeline
+- [x] Local contact database that grows with each enrichment job — Validated in Phase 3: Enrichment Pipeline
+- [x] Database-first lookup before any API call to prevent credit waste — Validated in Phase 3: Enrichment Pipeline
+- [x] Deduplication within a single upload (same person = one API call) — Validated in Phase 3: Enrichment Pipeline
+- [x] Background processing for large files (1,000+ rows) — Validated in Phase 3: Enrichment Pipeline
+- [x] Job isolation for concurrent multi-user processing — Validated in Phase 3: Enrichment Pipeline
+- [x] "Not found" status column for rows Apollo couldn't resolve — Validated in Phase 3: Enrichment Pipeline
 
 ### Active
 
-- [ ] Enrich contacts via Apollo People Enrichment API (email + phone)
-- [ ] Local contact database that grows with each enrichment job
-- [ ] Database-first lookup before any API call to prevent credit waste
-- [ ] Deduplication within a single upload (same person = one API call)
-- [ ] Background processing for large files (1,000+ rows)
-- [ ] Job isolation for concurrent multi-user processing
 - [ ] Download enriched Excel with original data + email/phone columns appended
 - [ ] Job history with full results (re-downloadable)
 - [ ] Contact database browser
 - [ ] Usage stats dashboard (API credits used, cache hits, jobs run)
-- [ ] "Not found" status column for rows Apollo couldn't resolve
 - [ ] Force re-enrichment option per job (override database cache)
 
 ### Out of Scope
