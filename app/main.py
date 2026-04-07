@@ -33,3 +33,8 @@ app.include_router(admin_router, prefix="/api/v1/admin", tags=["admin"])
 from app.jobs.routes import router as jobs_router
 
 app.include_router(jobs_router, prefix="/api/v1/jobs", tags=["jobs"])
+
+# Webhook routes (no JWT auth — uses shared secret per D-42/D-45)
+from app.enrichment.routes import router as webhook_router
+
+app.include_router(webhook_router, prefix="/api/v1", tags=["webhooks"])
