@@ -35,7 +35,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Output & History
 
-- [ ] **OUTPUT-01**: User can download enriched Excel file with original columns plus email, phone, and status columns appended; rows that timed out waiting for webhook phone data show a blank phone cell rather than an error
+- [x] **OUTPUT-01**: User can download enriched Excel file with original columns plus email, phone, and status columns appended; rows that timed out waiting for webhook phone data show a blank phone cell rather than an error
 - [ ] **OUTPUT-02**: User can query real-time job status and progress via API endpoint
 - [ ] **OUTPUT-03**: User can list job history and re-download results from any past enrichment job via API
 
@@ -111,7 +111,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ENRICH-10 | Phase 3 | Complete |
 | ENRICH-11 | Phase 3 | Complete |
 | JOB-01 | Phase 3 | Complete |
-| OUTPUT-01 | Phase 4 | Pending |
+| OUTPUT-01 | Phase 4 | Complete |
 | OUTPUT-02 | Phase 4 | Pending |
 | OUTPUT-03 | Phase 4 | Pending |
 | AUTH-01 | Phase 1 | Complete |
