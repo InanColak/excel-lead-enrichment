@@ -73,7 +73,7 @@ Plans:
 - [x] 03-01-PLAN.md — DB migrations (Job metrics, Contact apollo_id, linkedin_url index), Settings, Apollo client with tenacity retry
 - [x] 03-02-PLAN.md — Enrichment service orchestration (dedup, DB lookup, Apollo calls, result writing) and Celery tasks
 - [x] 03-03-PLAN.md — Webhook receiver endpoint with shared-secret auth, phone data correlation
-- [ ] 03-04-PLAN.md — Integration test suite for all Phase 3 requirements
+- [x] 03-04-PLAN.md — Integration test suite for all Phase 3 requirements
 
 ### Phase 4: Job Output and History
 **Goal**: Users can poll job progress, download enriched files, retrieve any past job result, and view usage stats showing API credits consumed and cache performance
