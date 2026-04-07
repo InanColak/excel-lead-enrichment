@@ -70,7 +70,7 @@ Plans:
 **Plans:** 4 plans
 
 Plans:
-- [ ] 03-01-PLAN.md — DB migrations (Job metrics, Contact apollo_id, linkedin_url index), Settings, Apollo client with tenacity retry
+- [x] 03-01-PLAN.md — DB migrations (Job metrics, Contact apollo_id, linkedin_url index), Settings, Apollo client with tenacity retry
 - [ ] 03-02-PLAN.md — Enrichment service orchestration (dedup, DB lookup, Apollo calls, result writing) and Celery tasks
 - [ ] 03-03-PLAN.md — Webhook receiver endpoint with shared-secret auth, phone data correlation
 - [ ] 03-04-PLAN.md — Integration test suite for all Phase 3 requirements
