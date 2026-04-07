@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 03-02-PLAN.md
-last_updated: "2026-04-07T11:28:41.066Z"
+stopped_at: Completed 03-03-PLAN.md
+last_updated: "2026-04-07T11:31:36.298Z"
 last_activity: 2026-04-07
 progress:
   total_phases: 4
   completed_phases: 1
   total_plans: 10
-  completed_plans: 7
-  percent: 70
+  completed_plans: 8
+  percent: 80
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 ## Current Position
 
 Phase: 03 (enrichment-pipeline) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-04-07
 
@@ -57,6 +57,7 @@ Progress: [░░░░░░░░░░] 0% (Phase 2)
 | Phase 02-file-ingestion P02 | 3min | 2 tasks | 4 files |
 | Phase 03 P01 | 2min | 2 tasks | 7 files |
 | Phase 03 P02 | 2min | 2 tasks | 4 files |
+| Phase 03 P03 | 1min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -77,6 +78,7 @@ Recent decisions affecting current work:
 - [Phase 03]: API key passed to ApolloClient constructor from DB, not from env settings, per Pitfall 4
 - [Phase 03]: ApolloNotFoundError separated from transient/client errors to avoid retrying valid no-match responses
 - [Phase 03]: Session factory injection pattern for Celery tasks instead of FastAPI get_db dependency
+- [Phase 03]: Webhook uses shared-secret auth (X-Apollo-Secret), not JWT; idempotent phone writes via SELECT FOR UPDATE
 
 ### Pending Todos
 
@@ -88,6 +90,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-07T11:28:39.815Z
-Stopped at: Completed 03-02-PLAN.md
+Last session: 2026-04-07T11:31:23.566Z
+Stopped at: Completed 03-03-PLAN.md
 Resume file: None
