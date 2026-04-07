@@ -29,12 +29,13 @@ Every uploaded Excel file comes back with accurate email addresses and phone num
 - [x] Job isolation for concurrent multi-user processing — Validated in Phase 3: Enrichment Pipeline
 - [x] "Not found" status column for rows Apollo couldn't resolve — Validated in Phase 3: Enrichment Pipeline
 
+- [x] Download enriched Excel with original data + email/phone columns appended — Validated in Phase 4: Job Output and History
+- [x] Job history with full results (re-downloadable) — Validated in Phase 4: Job Output and History
+- [x] Usage stats dashboard (API credits used, cache hits, jobs run) — Validated in Phase 4: Job Output and History
+
 ### Active
 
-- [ ] Download enriched Excel with original data + email/phone columns appended
-- [ ] Job history with full results (re-downloadable)
 - [ ] Contact database browser
-- [ ] Usage stats dashboard (API credits used, cache hits, jobs run)
 - [ ] Force re-enrichment option per job (override database cache)
 
 ### Out of Scope
