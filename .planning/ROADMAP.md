@@ -84,7 +84,11 @@ Plans:
   2. A user can download the enriched Excel file once a job completes — the file contains all original columns plus email, phone, and status columns appended; rows that timed out waiting for webhook phone data show a blank phone cell (not an error)
   3. A user can list all their past jobs and re-download the enriched output from any completed job
   4. A user can query a usage stats endpoint and see total API credits consumed, cache hit rate, and job counts over time
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Excel output generation module, Alembic migration, Celery task wiring (OUTPUT-01)
+- [ ] 04-02-PLAN.md — Job status polling, paginated listing, download endpoint, usage stats (OUTPUT-02, OUTPUT-03, AUTH-04)
 
 ## Progress
 
@@ -96,4 +100,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. Foundation | 3/3 | Complete | 2026-04-06 |
 | 2. File Ingestion | 0/3 | Planned | - |
 | 3. Enrichment Pipeline | 0/4 | Planned | - |
-| 4. Job Output and History | 0/TBD | Not started | - |
+| 4. Job Output and History | 0/2 | Planned | - |
