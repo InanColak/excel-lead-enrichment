@@ -398,4 +398,10 @@ async def confirm_job(
 
     await db.flush()
 
+    # Dispatch enrichment task to Celery worker
+    # Import inside function to avoid circular imports (tasks.py imports from jobs models)
+    from app.enrichment.tasks import process_enrichment_job
+
+    process_enrichment_job.delay(str(job.id))
+
     return job
