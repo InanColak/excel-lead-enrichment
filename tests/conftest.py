@@ -16,6 +16,7 @@ from app.models.base import Base
 
 # Import all models so Base.metadata knows about them for create_all/drop_all
 from app.admin.models import ApiConfig  # noqa: F401
+from app.contacts.models import Contact  # noqa: F401
 from app.jobs.models import Job, JobRow  # noqa: F401
 
 # Use the real PostgreSQL database from settings (reads DATABASE_URL from environment).
@@ -227,3 +228,65 @@ def upload_dir_override(tmp_path, monkeypatch):
     upload_dir.mkdir()
     monkeypatch.setattr(settings, "upload_dir", str(upload_dir))
     return upload_dir
+
+
+# -- Phase 3: Enrichment Pipeline Fixtures ------------------------------------
+
+
+@pytest.fixture
+def mock_apollo_success_response():
+    """Mock Apollo API success response with person match."""
+    return {
+        "person": {
+            "id": "apollo-person-123",
+            "first_name": "John",
+            "last_name": "Doe",
+            "email": "john@acme.com",
+            "email_status": "verified",
+            "linkedin_url": "linkedin.com/in/johndoe",
+            "title": "VP Sales",
+            "organization": {"name": "Acme Corp", "domain": "acme.com"},
+        },
+        "waterfall": {"status": "accepted"},
+    }
+
+
+@pytest.fixture
+def mock_apollo_not_found_response():
+    """Mock Apollo API response when no person match found."""
+    return {"person": None}
+
+
+@pytest.fixture
+def mock_webhook_payload():
+    """Mock Apollo webhook payload with phone data."""
+    return {
+        "request_id": "req-abc-123",
+        "people": [
+            {
+                "id": "apollo-person-123",
+                "waterfall": {
+                    "phone_numbers": [
+                        {
+                            "raw_number": "+1-555-123-4567",
+                            "sanitized_number": "+15551234567",
+                            "confidence_cd": "high",
+                            "status_cd": "valid_number",
+                        }
+                    ]
+                },
+            }
+        ],
+    }
+
+
+@pytest.fixture
+def sample_column_mappings():
+    """Sample column mappings as stored in Job.column_mappings."""
+    return [
+        {"column": "Email", "detected_type": "email", "confidence": "HIGH"},
+        {"column": "First Name", "detected_type": "first_name", "confidence": "HIGH"},
+        {"column": "Last Name", "detected_type": "last_name", "confidence": "HIGH"},
+        {"column": "Company", "detected_type": "company", "confidence": "MEDIUM"},
+        {"column": "LinkedIn", "detected_type": "linkedin_url", "confidence": "HIGH"},
+    ]
