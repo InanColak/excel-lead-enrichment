@@ -24,27 +24,21 @@ from app.jobs.models import Job, JobRow  # noqa: F401
 # SQLite is NOT used -- CLAUDE.md forbids it (no JSONB, no UUID, no concurrent writes).
 
 
-@pytest.fixture(scope="session")
-async def test_engine():
-    """Create engine connected to the real PostgreSQL. Tables created once per session."""
-    engine = create_async_engine(settings.database_url, echo=False)
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    yield engine
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-    await engine.dispose()
-
-
 @pytest.fixture
-async def test_session(test_engine):
-    """Per-test session with transaction rollback for isolation."""
-    async with test_engine.connect() as conn:
+async def test_session():
+    """Per-test session with transaction rollback for isolation.
+
+    Creates a fresh engine per test to avoid event-loop mismatches with asyncpg.
+    Tables already exist from Alembic migrations run at container startup.
+    """
+    engine = create_async_engine(settings.database_url, echo=False)
+    async with engine.connect() as conn:
         trans = await conn.begin()
         session = AsyncSession(bind=conn, expire_on_commit=False)
         yield session
         await session.close()
         await trans.rollback()
+    await engine.dispose()
 
 
 @pytest.fixture

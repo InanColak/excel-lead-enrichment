@@ -159,7 +159,8 @@ async def test_check_webhook_completion_all_received(test_session, regular_user)
     await test_session.flush()
 
     factory = _mock_session_factory(test_session)
-    await _check_webhook_completion_async(str(job.id), factory)
+    with patch("app.enrichment.tasks.generate_output_file", new_callable=AsyncMock):
+        await _check_webhook_completion_async(str(job.id), factory)
 
     await test_session.refresh(job)
     assert job.status == "complete"
@@ -220,7 +221,8 @@ async def test_check_webhook_completion_some_missing(test_session, regular_user)
     await test_session.flush()
 
     factory = _mock_session_factory(test_session)
-    await _check_webhook_completion_async(str(job.id), factory)
+    with patch("app.enrichment.tasks.generate_output_file", new_callable=AsyncMock):
+        await _check_webhook_completion_async(str(job.id), factory)
 
     await test_session.refresh(job)
     assert job.webhook_timeouts == 1
@@ -343,7 +345,8 @@ async def test_job_lifecycle_full(test_session, regular_user):
     await test_session.flush()
 
     # Step 4: Check webhook completion -> should transition to COMPLETE
-    await _check_webhook_completion_async(str(job.id), factory)
+    with patch("app.enrichment.tasks.generate_output_file", new_callable=AsyncMock):
+        await _check_webhook_completion_async(str(job.id), factory)
 
     await test_session.refresh(job)
     assert job.status == "complete"

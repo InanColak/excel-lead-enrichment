@@ -20,7 +20,7 @@ class JobResponse(BaseModel):
     progress_percent: float | None = None
     has_output: bool = False
     output_file_path: str | None = Field(default=None, exclude=True)
-    column_mappings: Optional[dict] = None
+    column_mappings: Optional[list | dict] = None
     created_at: datetime
     updated_at: datetime
 
