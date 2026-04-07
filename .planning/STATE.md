@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 04-01-PLAN.md
-last_updated: "2026-04-07T12:59:40.680Z"
+status: verifying
+stopped_at: Completed 04-02-PLAN.md
+last_updated: "2026-04-07T13:16:03.963Z"
 last_activity: 2026-04-07
 progress:
   total_phases: 4
-  completed_phases: 2
+  completed_phases: 3
   total_plans: 12
-  completed_plans: 10
-  percent: 83
+  completed_plans: 11
+  percent: 92
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-04-06)
 
 Phase: 04 (job-output-and-history) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-04-07
 
 Progress: [░░░░░░░░░░] 0% (Phase 2)
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0% (Phase 2)
 | Phase 03 P03 | 1min | 2 tasks | 2 files |
 | Phase 03 P04 | 5min | 2 tasks | 6 files |
 | Phase 04 P01 | 4min | 2 tasks | 6 files |
+| Phase 04 P02 | 4min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,8 @@ Recent decisions affecting current work:
 - [Phase 03]: Webhook uses shared-secret auth (X-Apollo-Secret), not JWT; idempotent phone writes via SELECT FOR UPDATE
 - [Phase 03]: Mock session factory pattern for testing Celery async functions without a running worker
 - [Phase 04]: Output generation opens its own session via session_factory, called after db.commit()
+- [Phase 04]: Used Field(exclude=True) on output_file_path to prevent filesystem path leaking while keeping has_output computation
+- [Phase 04]: Stats router mounted at /api/v1/stats per D-62, separate from jobs router
 
 ### Pending Todos
 
@@ -95,6 +98,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-04-07T12:59:29.875Z
-Stopped at: Completed 04-01-PLAN.md
+Last session: 2026-04-07T13:15:49.507Z
+Stopped at: Completed 04-02-PLAN.md
 Resume file: None

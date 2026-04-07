@@ -36,15 +36,15 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Output & History
 
 - [x] **OUTPUT-01**: User can download enriched Excel file with original columns plus email, phone, and status columns appended; rows that timed out waiting for webhook phone data show a blank phone cell rather than an error
-- [ ] **OUTPUT-02**: User can query real-time job status and progress via API endpoint
-- [ ] **OUTPUT-03**: User can list job history and re-download results from any past enrichment job via API
+- [x] **OUTPUT-02**: User can query real-time job status and progress via API endpoint
+- [x] **OUTPUT-03**: User can list job history and re-download results from any past enrichment job via API
 
 ### Authentication & Admin
 
 - [x] **AUTH-01**: User can log in with email and password
 - [x] **AUTH-02**: Admin can configure the shared Apollo API key via API endpoint (without redeployment)
 - [x] **AUTH-03**: Admin can add and remove team members
-- [ ] **AUTH-04**: User can query usage stats via API (credits used, cache hit rate, jobs run over time)
+- [x] **AUTH-04**: User can query usage stats via API (credits used, cache hit rate, jobs run over time)
 
 ### Infrastructure
 
@@ -112,12 +112,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | ENRICH-11 | Phase 3 | Complete |
 | JOB-01 | Phase 3 | Complete |
 | OUTPUT-01 | Phase 4 | Complete |
-| OUTPUT-02 | Phase 4 | Pending |
-| OUTPUT-03 | Phase 4 | Pending |
+| OUTPUT-02 | Phase 4 | Complete |
+| OUTPUT-03 | Phase 4 | Complete |
 | AUTH-01 | Phase 1 | Complete |
 | AUTH-02 | Phase 1 | Complete |
 | AUTH-03 | Phase 1 | Complete |
-| AUTH-04 | Phase 4 | Pending |
+| AUTH-04 | Phase 4 | Complete |
 | INFRA-01 | Phase 1 | Complete |
 | INFRA-02 | Phase 1 | Complete |
 | INFRA-03 | Phase 1 | Complete |

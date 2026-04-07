@@ -88,7 +88,7 @@ Plans:
 
 Plans:
 - [x] 04-01-PLAN.md — Excel output generation module, Alembic migration, Celery task wiring (OUTPUT-01)
-- [ ] 04-02-PLAN.md — Job status polling, paginated listing, download endpoint, usage stats (OUTPUT-02, OUTPUT-03, AUTH-04)
+- [x] 04-02-PLAN.md — Job status polling, paginated listing, download endpoint, usage stats (OUTPUT-02, OUTPUT-03, AUTH-04)
 
 ## Progress
 
