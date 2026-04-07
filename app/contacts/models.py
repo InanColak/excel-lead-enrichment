@@ -16,4 +16,5 @@ class Contact(Base, UUIDMixin, TimestampMixin):
     last_name: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     company: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     linkedin_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    apollo_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True, index=True)
     raw_apollo_response: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)

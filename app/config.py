@@ -13,6 +13,9 @@ class Settings(BaseSettings):
     max_upload_size_mb: int = 10
     max_rows_per_file: int = 10000
     debug: bool = False
+    apollo_api_url: str = "https://api.apollo.io/api/v1/people/match"
+    apollo_webhook_secret: str = "changeme-webhook-secret"
+    webhook_timeout_seconds: int = 300
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

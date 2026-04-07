@@ -44,6 +44,11 @@ class Job(Base, UUIDMixin, TimestampMixin):
     valid_rows: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     error_rows: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     column_mappings: Mapped[Optional[dict]] = mapped_column(JSONB, nullable=True)
+    processed_rows: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    cache_hits: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    api_calls: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    webhook_callbacks_received: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    webhook_timeouts: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
 
 
 class JobRow(Base, UUIDMixin, TimestampMixin):
