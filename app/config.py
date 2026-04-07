@@ -15,6 +15,7 @@ class Settings(BaseSettings):
     debug: bool = False
     apollo_api_url: str = "https://api.apollo.io/api/v1/people/match"
     apollo_webhook_secret: str = "changeme-webhook-secret"
+    webhook_base_url: str = ""
     webhook_timeout_seconds: int = 300
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
