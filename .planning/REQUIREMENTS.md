@@ -17,21 +17,21 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Enrichment Pipeline
 
-- [ ] **ENRICH-01**: System assigns a unique UUID to each row at parse time, tracked through the entire pipeline
-- [ ] **ENRICH-02**: System deduplicates contacts within a single upload (same person = one API call, result fanned to all matching rows)
-- [ ] **ENRICH-03**: System checks local contact database first before making any Apollo API call
+- [x] **ENRICH-01**: System assigns a unique UUID to each row at parse time, tracked through the entire pipeline
+- [x] **ENRICH-02**: System deduplicates contacts within a single upload (same person = one API call, result fanned to all matching rows)
+- [x] **ENRICH-03**: System checks local contact database first before making any Apollo API call
 - [x] **ENRICH-04**: System calls Apollo People Enrichment API for contacts not found in local database; the immediate API response returns email, while phone number is delivered asynchronously via Apollo webhook callback
-- [ ] **ENRICH-05**: System stores all Apollo enrichment results (email from immediate response, phone from webhook) in the local contact database for future lookups
-- [ ] **ENRICH-06**: System marks rows where Apollo returns no match with a "not found" status column
-- [ ] **ENRICH-07**: System processes large files (1,000+ rows) as background jobs with progress tracking
-- [ ] **ENRICH-08**: System isolates concurrent jobs so multiple users can process simultaneously without data corruption
-- [ ] **ENRICH-09**: System preserves the original uploaded file (never modified)
+- [x] **ENRICH-05**: System stores all Apollo enrichment results (email from immediate response, phone from webhook) in the local contact database for future lookups
+- [x] **ENRICH-06**: System marks rows where Apollo returns no match with a "not found" status column
+- [x] **ENRICH-07**: System processes large files (1,000+ rows) as background jobs with progress tracking
+- [x] **ENRICH-08**: System isolates concurrent jobs so multiple users can process simultaneously without data corruption
+- [x] **ENRICH-09**: System preserves the original uploaded file (never modified)
 - [x] **ENRICH-10**: System tracks per-job metrics (cache hits, cache misses, API calls made, credits consumed, webhook callbacks received, webhook timeouts)
 - [x] **ENRICH-11**: System exposes a webhook receiver endpoint that accepts Apollo phone-data callbacks, authenticates them, correlates them to the correct pending contact by Apollo's lookup ID, and handles delivery failures — if no webhook arrives within the configured timeout the row completes with email only and the timeout is recorded
 
 ### Job Lifecycle
 
-- [ ] **JOB-01**: System assigns a unique job ID on upload that tracks the job through its full lifecycle (PENDING_CONFIRMATION → PROCESSING → AWAITING_WEBHOOKS → COMPLETE / PARTIAL / FAILED), and all rows, webhook callbacks, metrics, and downloadable outputs are keyed to this job ID
+- [x] **JOB-01**: System assigns a unique job ID on upload that tracks the job through its full lifecycle (PENDING_CONFIRMATION → PROCESSING → AWAITING_WEBHOOKS → COMPLETE / PARTIAL / FAILED), and all rows, webhook callbacks, metrics, and downloadable outputs are keyed to this job ID
 
 ### Output & History
 
@@ -99,18 +99,18 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FILE-03 | Phase 2 | Complete |
 | FILE-04 | Phase 2 | Complete |
 | FILE-05 | Phase 2 | Complete |
-| ENRICH-01 | Phase 3 | Pending |
-| ENRICH-02 | Phase 3 | Pending |
-| ENRICH-03 | Phase 3 | Pending |
+| ENRICH-01 | Phase 3 | Complete |
+| ENRICH-02 | Phase 3 | Complete |
+| ENRICH-03 | Phase 3 | Complete |
 | ENRICH-04 | Phase 3 | Complete |
-| ENRICH-05 | Phase 3 | Pending |
-| ENRICH-06 | Phase 3 | Pending |
-| ENRICH-07 | Phase 3 | Pending |
-| ENRICH-08 | Phase 3 | Pending |
-| ENRICH-09 | Phase 3 | Pending |
+| ENRICH-05 | Phase 3 | Complete |
+| ENRICH-06 | Phase 3 | Complete |
+| ENRICH-07 | Phase 3 | Complete |
+| ENRICH-08 | Phase 3 | Complete |
+| ENRICH-09 | Phase 3 | Complete |
 | ENRICH-10 | Phase 3 | Complete |
 | ENRICH-11 | Phase 3 | Complete |
-| JOB-01 | Phase 3 | Pending |
+| JOB-01 | Phase 3 | Complete |
 | OUTPUT-01 | Phase 4 | Pending |
 | OUTPUT-02 | Phase 4 | Pending |
 | OUTPUT-03 | Phase 4 | Pending |
