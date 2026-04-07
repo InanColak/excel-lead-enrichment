@@ -8,30 +8,35 @@ An internal SaaS application that enriches contact data from uploaded Excel file
 
 Every uploaded Excel file comes back with accurate email addresses and phone numbers — without wasting Apollo API credits on data we already have.
 
+## Current State
+
+**v1.0 shipped on 2026-04-07.** The full enrichment platform is operational:
+
+- Docker Compose deployment (API + Celery worker + PostgreSQL + Redis + Flower)
+- JWT authentication with admin user management
+- Excel upload with auto-detection of 8 column types and manual override
+- Background enrichment pipeline: DB-first cache, Apollo API with retry, dedup within uploads
+- Two-stage enrichment: email via API response, phone via Apollo webhook with timeout fallback
+- Job status polling, paginated history, enriched file download, usage stats dashboard
+- 150 integration tests, 27 requirements satisfied, 79 code files, 7,434 LOC
+
+**API endpoints available via Swagger UI at** `http://localhost:8000/docs`
+
+## Next Milestone Goals
+
+Candidates for v2 (not yet planned — run `/gsd-new-milestone` to start):
+
+- Contact database browser (search by name, company, email domain)
+- Force re-enrichment option per job (bypass cache)
+- Per-user usage breakdown for admins
+- Contact database export (Excel/CSV snapshot)
+- Cache hit rate trends over time
+
 ## Requirements
 
-### Validated
+### Validated (v1.0 — archived)
 
-- [x] Upload Excel files with mixed/varying column formats — Validated in Phase 2: File Ingestion
-- [x] Auto-detect column types (name, company, LinkedIn URL, etc.) with manual override — Validated in Phase 2: File Ingestion
-- [x] Row-level tracking with unique IDs through the pipeline — Validated in Phase 2: File Ingestion
-- [x] Original uploaded file preserved (never modified) — Validated in Phase 2: File Ingestion
-- [x] Excel validation on upload (size limits, format checks, graceful bad-row handling) — Validated in Phase 2: File Ingestion
-- [x] Simple email/password authentication for the team — Validated in Phase 1: Foundation
-- [x] Admin-managed shared Apollo API key configuration — Validated in Phase 1: Foundation
-- [x] Team management (add/remove users) — Validated in Phase 1: Foundation
-- [x] Docker-based deployment — Validated in Phase 1: Foundation
-- [x] Enrich contacts via Apollo People Enrichment API (email + phone) — Validated in Phase 3: Enrichment Pipeline
-- [x] Local contact database that grows with each enrichment job — Validated in Phase 3: Enrichment Pipeline
-- [x] Database-first lookup before any API call to prevent credit waste — Validated in Phase 3: Enrichment Pipeline
-- [x] Deduplication within a single upload (same person = one API call) — Validated in Phase 3: Enrichment Pipeline
-- [x] Background processing for large files (1,000+ rows) — Validated in Phase 3: Enrichment Pipeline
-- [x] Job isolation for concurrent multi-user processing — Validated in Phase 3: Enrichment Pipeline
-- [x] "Not found" status column for rows Apollo couldn't resolve — Validated in Phase 3: Enrichment Pipeline
-
-- [x] Download enriched Excel with original data + email/phone columns appended — Validated in Phase 4: Job Output and History
-- [x] Job history with full results (re-downloadable) — Validated in Phase 4: Job Output and History
-- [x] Usage stats dashboard (API credits used, cache hits, jobs run) — Validated in Phase 4: Job Output and History
+All 27 v1 requirements shipped. See [v1.0 requirements archive](milestones/v1.0-REQUIREMENTS.md).
 
 ### Active
 
@@ -68,25 +73,27 @@ Every uploaded Excel file comes back with accurate email addresses and phone num
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Database-first lookup before API | Prevents duplicate API calls, saves credits, builds reusable contact asset | — Pending |
-| Auto-detect + manual override for columns | Handles messy Excel files while giving users control | — Pending |
-| Shared Apollo API key (admin-managed) | Simpler for internal team, single billing point | — Pending |
-| Row-level unique ID tracking | Prevents data mix-ups in enrichment pipeline | — Pending |
-| Job isolation for concurrency | Prevents data corruption when multiple users process simultaneously | — Pending |
-| Docker deployment | Portable, consistent environment, deploy anywhere | — Pending |
-| API-only, no frontend | This is one of several company apps; a unified dashboard will consume APIs later. Swagger UI for now. | — Pending |
-| API gateway pattern for future dashboard | Each app exposes its own REST API; dashboard aggregates. No DB coupling between apps. | — Pending |
+| Database-first lookup before API | Prevents duplicate API calls, saves credits, builds reusable contact asset | Shipped v1.0 |
+| Auto-detect + manual override for columns | Handles messy Excel files while giving users control | Shipped v1.0 |
+| Shared Apollo API key (admin-managed) | Simpler for internal team, single billing point | Shipped v1.0 |
+| Row-level unique ID tracking | Prevents data mix-ups in enrichment pipeline | Shipped v1.0 |
+| Job isolation for concurrency | Prevents data corruption when multiple users process simultaneously | Shipped v1.0 |
+| Docker deployment | Portable, consistent environment, deploy anywhere | Shipped v1.0 |
+| API-only, no frontend | This is one of several company apps; a unified dashboard will consume APIs later. Swagger UI for now. | Shipped v1.0 |
+| API gateway pattern for future dashboard | Each app exposes its own REST API; dashboard aggregates. No DB coupling between apps. | Shipped v1.0 |
+| pwdlib[bcrypt] + PyJWT over passlib + python-jose | Research found more actively maintained alternatives | Shipped v1.0 |
+| Apollo webhook for phone data | Apollo delivers phone numbers asynchronously; pipeline has two-stage design with timeout | Shipped v1.0 |
 
 ## Evolution
 
 This document evolves at phase transitions and milestone boundaries.
 
 **After each phase transition** (via `/gsd-transition`):
-1. Requirements invalidated? → Move to Out of Scope with reason
-2. Requirements validated? → Move to Validated with phase reference
-3. New requirements emerged? → Add to Active
-4. Decisions to log? → Add to Key Decisions
-5. "What This Is" still accurate? → Update if drifted
+1. Requirements invalidated? -> Move to Out of Scope with reason
+2. Requirements validated? -> Move to Validated with phase reference
+3. New requirements emerged? -> Add to Active
+4. Decisions to log? -> Add to Key Decisions
+5. "What This Is" still accurate? -> Update if drifted
 
 **After each milestone** (via `/gsd-complete-milestone`):
 1. Full review of all sections
@@ -95,4 +102,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-04-06 after Phase 2 (File Ingestion) completion*
+*Last updated: 2026-04-07 — v1.0 milestone completed*
