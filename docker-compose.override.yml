@@ -9,6 +9,7 @@ services:
       - ./alembic.ini:/app/alembic.ini
       - ./alembic:/app/alembic
       - ./scripts:/app/scripts
+      - ./tests:/app/tests
     ports:
       - "8000:8000"
       - "8001:8001"
@@ -19,6 +20,7 @@ services:
       DEBUG: "true"
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@example.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-changeme}
+      WEBHOOK_BASE_URL: ${WEBHOOK_BASE_URL:-}
     command: bash /app/scripts/dev-entrypoint.sh
 
   worker:
@@ -30,3 +32,8 @@ services:
       - ./data/uploads:/data/uploads
       - ./alembic.ini:/app/alembic.ini
       - ./alembic:/app/alembic
+    environment:
+      DATABASE_URL: postgresql+asyncpg://leadenrich:${DB_PASSWORD}@db:5432/leadenrich
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY}
+      WEBHOOK_BASE_URL: ${WEBHOOK_BASE_URL:-}

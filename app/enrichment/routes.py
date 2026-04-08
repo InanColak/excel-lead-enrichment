@@ -19,19 +19,21 @@ router = APIRouter(tags=["webhooks"])
 @router.post("/webhooks/apollo", status_code=200)
 async def receive_apollo_webhook(
     payload: ApolloWebhookPayload,
-    x_apollo_secret: str = Header(..., alias="X-Apollo-Secret"),
+    x_apollo_secret: Optional[str] = Header(None, alias="X-Apollo-Secret"),
     db: AsyncSession = Depends(get_db),
 ):
     """Receive Apollo phone-data webhook callback.
 
-    Per D-42: authenticates via X-Apollo-Secret shared secret header.
+    Per D-42: authenticates via X-Apollo-Secret shared secret header (optional —
+    Apollo does not send this header, so validation only applies when configured
+    and the header is present).
     Per D-44: correlates to contact via apollo_id (person.id in webhook payload).
     Per D-46: accepts late webhooks — always updates contact phone if empty.
     Per Pitfall 3: uses SELECT FOR UPDATE to prevent race with timeout checker.
     Returns 200 immediately on valid requests.
     """
-    # D-42: Validate shared secret
-    if x_apollo_secret != settings.apollo_webhook_secret:
+    # D-42: Validate shared secret if header is provided
+    if x_apollo_secret is not None and x_apollo_secret != settings.apollo_webhook_secret:
         logger.warning("Webhook rejected: invalid X-Apollo-Secret header")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -89,22 +91,30 @@ async def receive_apollo_webhook(
 def _extract_best_phone(person) -> Optional[str]:
     """Extract the best phone number from webhook person payload.
     Prefers sanitized_number. Picks first valid_number or highest confidence.
+    Checks both person.phone_numbers (actual Apollo format) and
+    person.waterfall.phone_numbers (legacy schema) for compatibility.
     """
-    if not person.waterfall or not person.waterfall.phone_numbers:
+    # Apollo sends phone_numbers directly on person
+    phone_numbers = person.phone_numbers or []
+    # Fallback to waterfall if direct list is empty
+    if not phone_numbers and person.waterfall and person.waterfall.phone_numbers:
+        phone_numbers = person.waterfall.phone_numbers
+
+    if not phone_numbers:
         return None
 
     # Prefer valid numbers with sanitized format
-    for phone in person.waterfall.phone_numbers:
+    for phone in phone_numbers:
         if phone.status_cd == "valid_number" and phone.sanitized_number:
             return phone.sanitized_number
 
     # Fallback: any sanitized number
-    for phone in person.waterfall.phone_numbers:
+    for phone in phone_numbers:
         if phone.sanitized_number:
             return phone.sanitized_number
 
     # Last resort: raw number
-    for phone in person.waterfall.phone_numbers:
+    for phone in phone_numbers:
         if phone.raw_number:
             return phone.raw_number
 

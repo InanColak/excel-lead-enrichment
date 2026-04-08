@@ -260,6 +260,7 @@ async def process_job(
                             )
                             db.add(contact)
                             await db.flush()
+                            await db.commit()
 
                             # Link all rows in group to this contact
                             for row in group_rows:

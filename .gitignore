@@ -25,3 +25,15 @@ dist/
 
 # Docker
 postgres_data/
+
+# Planning
+.planning/
+
+# Claude Code
+.claude/
+
+# Data
+data/
+
+# Excel files
+*.xlsx

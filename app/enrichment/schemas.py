@@ -54,9 +54,17 @@ class ApolloWebhookWaterfall(BaseModel):
 
 class ApolloWebhookPerson(BaseModel):
     id: Optional[str] = None
+    status: Optional[str] = None
+    # Apollo sends phone_numbers directly on person (not nested under waterfall)
+    phone_numbers: list[ApolloPhoneNumber] = Field(default_factory=list)
+    # Keep waterfall for backward compatibility if Apollo changes format
     waterfall: Optional[ApolloWebhookWaterfall] = None
 
 
 class ApolloWebhookPayload(BaseModel):
-    request_id: Optional[str] = None
+    status: Optional[str] = None
+    total_requested_enrichments: Optional[int] = None
+    unique_enriched_records: Optional[int] = None
+    missing_records: Optional[int] = None
+    credits_consumed: Optional[int] = None
     people: list[ApolloWebhookPerson] = Field(default_factory=list)
