@@ -14,9 +14,12 @@ class Settings(BaseSettings):
     max_rows_per_file: int = 10000
     debug: bool = False
     apollo_api_url: str = "https://api.apollo.io/api/v1/people/match"
+    apollo_bulk_api_url: str = "https://api.apollo.io/api/v1/people/bulk_match"
     apollo_webhook_secret: str = "changeme-webhook-secret"
     webhook_base_url: str = ""
     webhook_timeout_seconds: int = 300
+    bulk_batch_size: int = 10
+    bulk_batch_delay_seconds: int = 30
 
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

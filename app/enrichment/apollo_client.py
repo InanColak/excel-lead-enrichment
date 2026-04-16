@@ -14,7 +14,7 @@ from tenacity import (
 from app.admin.models import ApiConfig
 from app.admin.service import decrypt_api_key
 from app.config import settings
-from app.enrichment.schemas import ApolloEnrichResponse
+from app.enrichment.schemas import ApolloEnrichResponse, ApolloBulkEnrichResponse
 
 logger = logging.getLogger(__name__)
 
@@ -106,6 +106,7 @@ class ApolloClient:
             payload["linkedin_url"] = linkedin_url
         payload["reveal_personal_emails"] = True
         payload["reveal_phone_number"] = True
+        payload["run_waterfall_phone"] = True
         if self.webhook_url:
             payload["webhook_url"] = self.webhook_url
 
@@ -139,3 +140,55 @@ class ApolloClient:
             raise ApolloNotFoundError("Apollo returned no person match")
 
         return parsed
+
+    @retry(
+        stop=stop_after_attempt(5),
+        wait=wait_exponential(multiplier=2, min=2, max=60),
+        retry=retry_if_exception_type(ApolloTransientError),
+        reraise=True,
+    )
+    async def bulk_enrich_people(
+        self,
+        details: list[dict],
+    ) -> ApolloBulkEnrichResponse:
+        """Call Apollo Bulk People Enrichment API (max 10 people per call).
+
+        Each entry in details is a dict with optional keys:
+        first_name, last_name, organization_name, email, linkedin_url.
+
+        Returns parsed bulk response with matches array.
+        """
+        payload: dict = {
+            "details": details,
+            "reveal_personal_emails": True,
+            "reveal_phone_number": True,
+            "run_waterfall_phone": True,
+        }
+        if self.webhook_url:
+            payload["webhook_url"] = self.webhook_url
+
+        try:
+            response = await self.client.post(
+                settings.apollo_bulk_api_url,
+                json=payload,
+                headers={
+                    "x-api-key": self.api_key,
+                    "Content-Type": "application/json",
+                },
+            )
+        except httpx.TimeoutException as e:
+            raise ApolloTransientError(f"Network timeout: {e}") from e
+        except httpx.ConnectError as e:
+            raise ApolloTransientError(f"Connection error: {e}") from e
+
+        if response.status_code == 429:
+            raise ApolloTransientError("Rate limited (429)")
+        if response.status_code >= 500:
+            raise ApolloTransientError(f"Server error ({response.status_code})")
+        if response.status_code == 401:
+            raise ApolloClientError("Invalid Apollo API key (401)")
+        if response.status_code == 400:
+            raise ApolloClientError(f"Bad request (400): {response.text[:200]}")
+
+        data = response.json()
+        return ApolloBulkEnrichResponse.model_validate(data)

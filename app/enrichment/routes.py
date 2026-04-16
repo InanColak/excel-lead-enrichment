@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import settings
 from app.contacts.models import Contact
 from app.deps import get_db
-from app.enrichment.schemas import ApolloWebhookPayload
+from app.enrichment.schemas import ApolloWebhookPayload, extract_best_phone
 from app.jobs.models import Job, JobRow
 
 logger = logging.getLogger(__name__)
@@ -58,8 +58,11 @@ async def receive_apollo_webhook(
             logger.warning(f"Webhook received for unknown apollo_id: {person.id}")
             continue
 
-        # Extract best phone number from waterfall
-        phone_number = _extract_best_phone(person)
+        # Extract best phone number from webhook payload
+        all_phones = person.phone_numbers or []
+        if not all_phones and person.waterfall and person.waterfall.phone_numbers:
+            all_phones = person.waterfall.phone_numbers
+        phone_number = extract_best_phone(all_phones)
         if not phone_number:
             continue
 
@@ -88,34 +91,3 @@ async def receive_apollo_webhook(
     return {"status": "ok", "contacts_updated": updated_count}
 
 
-def _extract_best_phone(person) -> Optional[str]:
-    """Extract the best phone number from webhook person payload.
-    Prefers sanitized_number. Picks first valid_number or highest confidence.
-    Checks both person.phone_numbers (actual Apollo format) and
-    person.waterfall.phone_numbers (legacy schema) for compatibility.
-    """
-    # Apollo sends phone_numbers directly on person
-    phone_numbers = person.phone_numbers or []
-    # Fallback to waterfall if direct list is empty
-    if not phone_numbers and person.waterfall and person.waterfall.phone_numbers:
-        phone_numbers = person.waterfall.phone_numbers
-
-    if not phone_numbers:
-        return None
-
-    # Prefer valid numbers with sanitized format
-    for phone in phone_numbers:
-        if phone.status_cd == "valid_number" and phone.sanitized_number:
-            return phone.sanitized_number
-
-    # Fallback: any sanitized number
-    for phone in phone_numbers:
-        if phone.sanitized_number:
-            return phone.sanitized_number
-
-    # Last resort: raw number
-    for phone in phone_numbers:
-        if phone.raw_number:
-            return phone.raw_number
-
-    return None

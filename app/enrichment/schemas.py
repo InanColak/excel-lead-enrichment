@@ -21,6 +21,45 @@ class ApolloOrganization(BaseModel):
     domain: Optional[str] = None
 
 
+class ApolloPhoneNumber(BaseModel):
+    raw_number: Optional[str] = None
+    sanitized_number: Optional[str] = None
+    confidence_cd: Optional[str] = None
+    status_cd: Optional[str] = None
+    status: Optional[str] = None  # Apollo sends "status" in initial response
+
+
+def extract_best_phone(phone_numbers: list["ApolloPhoneNumber"]) -> Optional[str]:
+    """Extract the best phone number from a list of Apollo phone entries.
+
+    Priority: valid sanitized > any sanitized > raw number.
+    Used by both initial API response and webhook handler.
+    """
+    if not phone_numbers:
+        return None
+
+    # Prefer valid numbers with sanitized format
+    for phone in phone_numbers:
+        is_valid = (
+            phone.status_cd == "valid_number"
+            or phone.status == "valid_number"
+        )
+        if is_valid and phone.sanitized_number:
+            return phone.sanitized_number
+
+    # Fallback: any sanitized number
+    for phone in phone_numbers:
+        if phone.sanitized_number:
+            return phone.sanitized_number
+
+    # Last resort: raw number
+    for phone in phone_numbers:
+        if phone.raw_number:
+            return phone.raw_number
+
+    return None
+
+
 class ApolloPerson(BaseModel):
     id: Optional[str] = None
     first_name: Optional[str] = None
@@ -30,6 +69,7 @@ class ApolloPerson(BaseModel):
     linkedin_url: Optional[str] = None
     title: Optional[str] = None
     organization: Optional[ApolloOrganization] = None
+    phone_numbers: list[ApolloPhoneNumber] = Field(default_factory=list)
 
 
 class ApolloWaterfall(BaseModel):
@@ -41,11 +81,13 @@ class ApolloEnrichResponse(BaseModel):
     waterfall: Optional[ApolloWaterfall] = None
 
 
-class ApolloPhoneNumber(BaseModel):
-    raw_number: Optional[str] = None
-    sanitized_number: Optional[str] = None
-    confidence_cd: Optional[str] = None
-    status_cd: Optional[str] = None
+class ApolloBulkEnrichResponse(BaseModel):
+    status: Optional[str] = None
+    matches: list[ApolloPerson] = Field(default_factory=list)
+    total_requested_enrichments: Optional[int] = None
+    unique_enriched_records: Optional[int] = None
+    missing_records: Optional[int] = None
+    credits_consumed: Optional[int] = None
 
 
 class ApolloWebhookWaterfall(BaseModel):
