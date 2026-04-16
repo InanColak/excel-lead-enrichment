@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     bulk_batch_size: int = 10
     bulk_batch_delay_seconds: int = 30
 
-    model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_file": ".env", "env_file_encoding": "utf-8", "extra": "ignore"}
 
 
 settings = Settings()
