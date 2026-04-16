@@ -21,6 +21,20 @@ services:
       timeout: 3s
       retries: 5
 
+  caddy:
+    image: caddy:2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
   api:
     build:
       context: .
@@ -29,8 +43,11 @@ services:
       DATABASE_URL: postgresql+asyncpg://leadenrich:${DB_PASSWORD}@db:5432/leadenrich
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY}
-    ports:
-      - "8000:8000"
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      WEBHOOK_BASE_URL: ${WEBHOOK_BASE_URL}
+    expose:
+      - "8000"
     volumes:
       - upload_data:/data/uploads
     depends_on:
@@ -56,6 +73,7 @@ services:
       DATABASE_URL: postgresql+asyncpg://leadenrich:${DB_PASSWORD}@db:5432/leadenrich
       REDIS_URL: redis://redis:6379/0
       SECRET_KEY: ${SECRET_KEY}
+      WEBHOOK_BASE_URL: ${WEBHOOK_BASE_URL}
     depends_on:
       db:
         condition: service_healthy
@@ -79,3 +97,5 @@ services:
 volumes:
   postgres_data:
   upload_data:
+  caddy_data:
+  caddy_config:
