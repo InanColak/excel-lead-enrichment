@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     max_upload_size_mb: int = 10
     max_rows_per_file: int = 10000
     debug: bool = False
+    auth_enabled: bool = False
     apollo_api_url: str = "https://api.apollo.io/api/v1/people/match"
     apollo_bulk_api_url: str = "https://api.apollo.io/api/v1/people/bulk_match"
     apollo_webhook_secret: str = "changeme-webhook-secret"
